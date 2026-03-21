@@ -3,7 +3,7 @@
 ## Stack Snapshot
 
 - App type: static Astro portfolio/blog built with content collections and Tailwind CSS v4.
-- Package manager: Bun. The repo does not pin a `packageManager` field in `package.json`; local environment currently has `bun 1.3.10`.
+- Package manager: Bun. The repo does not pin a `packageManager` field in `package.json`; the local environment used when writing this doc had `bun 1.3.10`. Run `bun --version` to confirm your local Bun version, or check `package.json` if a `packageManager` field is added later.
 - Declared direct dependencies in `package.json`:
   - `astro@^6.0.4`
   - `tailwindcss@^4.2.1`
@@ -39,8 +39,9 @@
 - `src/styles/global.css`: Tailwind v4 entrypoint, typography plugin registration, and theme tokens.
 - `public/`: active static assets used by the site, including `favicon.svg`, `portrait.webp`, and project thumbnails.
 - `src/assets/`: currently contains `astro.svg` and `background.svg`, but those files are not used by the rendered site.
+- `src/utils/projects.ts`: shared deterministic sorting helpers for the `projects` collection.
 - Generated directories: `dist/`, `.astro/`, and `node_modules/` are build/install artifacts and should not be edited manually.
-- There is no `src/hooks/`, `src/lib/`, or `src/utils/` directory in the current implementation.
+- There is no `src/hooks/` or `src/lib/` directory in the current implementation.
 
 ## Content Collections
 
@@ -64,6 +65,8 @@
     - `description: string`
     - `image: { url: string; alt: string }`
   - Optional frontmatter:
+    - `order: number`
+    - `date: Date` via `z.coerce.date()`
     - `liveUrl: string` validated with `z.url()`
     - `githubUrl: string` validated with `z.url()`
 
@@ -80,10 +83,11 @@ Important implementation details:
 - `src/components/Posts.astro` fetches blog entries with `getCollection("blog")`, filters out drafts, sorts by descending `date`, and shows the latest 3 entries.
 - `src/pages/blog/index.astro` groups non-draft blog posts by year in descending order.
 - `src/pages/blog/[...id].astro` uses `post.id` directly for route params. If content is later nested under subfolders, the generated URL will include those segments.
-- `src/components/Projects.astro` shows only the first 3 project entries with no explicit sort.
-- `src/components/Footer.astro` also slices the first 3 projects with no explicit sort.
-- `src/pages/projects/index.astro` renders all project entries with no explicit sort.
-- `src/pages/projects/[...id].astro` renders every project entry returned by the collection.
+- `src/utils/projects.ts` provides the shared deterministic `projects` sort: `order` ascending, then `date` descending, then `id` ascending as a final tie-breaker.
+- `src/components/Projects.astro` sorts the `projects` collection with that shared helper before taking the first 3 entries.
+- `src/components/Footer.astro` uses the same sorted top 3 projects as the homepage section.
+- `src/pages/projects/index.astro` renders the full `projects` collection in that same deterministic order.
+- `src/pages/projects/[...id].astro` uses the shared sorted collection for `getStaticPaths()`. There is currently no previous/next project navigation.
 - `astro.config.mjs` reads `SITE.URL` from `src/consts.ts` for the Astro `site` setting and sitemap integration. It is currently the placeholder `https://your_site.com`; update that before relying on sitemap or canonical URL output.
 
 ## Code Conventions
@@ -91,7 +95,10 @@ Important implementation details:
 - Use the `@/*` alias from `tsconfig.json`. No other path aliases are configured.
 - Keep route files lowercase and component files PascalCase.
 - This codebase is server-first Astro. Data loading happens directly in page/component frontmatter with `getCollection()`, not through a separate service layer.
-- Props typing is mixed: some files use `interface Props`, others use `type Props`, and some destructure `Astro.props` without an explicit annotation. Follow the local file style; do not churn files just to normalize prop syntax.
+- Name local prop declarations `Props`. Prefer `interface Props` for normal object-shaped component props, for example `interface Props { title: string; }`.
+- Use `type Props` only when `Props` needs to alias a non-object type or compose unions, intersections, or generics more cleanly than `interface Props`, for example `type Props = CollectionEntry<"blog">`.
+- Directly destructuring `Astro.props` is allowed when the file already has a nearby `Props` declaration and the shape is simple and obvious. When the prop shape is non-trivial, when you keep the whole value instead of destructuring, or when inference would be unclear, add an explicit annotation such as `const props: Props = Astro.props`, `const { project }: Props = Astro.props`, or `const post: Props = Astro.props` instead of relying on ad hoc inline casts.
+- Keep the existing local file style when editing older files. Do not batch-convert `type Props` to `interface Props`, or rewrite every `Astro.props` access only for style consistency. Migrate opportunistically: new object-shaped props should default to `interface Props`, while existing files may keep their current `type Props` or `Astro.props` pattern unless the touched code would be clearer with the preferred convention.
 - Inline `<style>` and `<script>` blocks are normal here. Existing examples include the mobile menu toggle, the card hover cursor effect, and marquee animations.
 - Styling is Tailwind v4 in CSS-first mode:
   - `@import "tailwindcss";`
