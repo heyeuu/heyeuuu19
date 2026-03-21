@@ -1,90 +1,110 @@
 ---
-import { SITE } from "@/consts";
 import Layout from "@/layouts/Layout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
+import { sortProjects } from "@/utils/projects";
 
-export async function getStaticPaths() {
-    const allProjects: CollectionEntry<"projects">[] =
-        await getCollection("projects");
-
-    return allProjects.map((project) => ({
-        params: { id: project.id },
-        props: { project },
-    }));
+interface Props {
+  project: CollectionEntry<"projects">;
 }
 
-const { project } = Astro.props;
+export async function getStaticPaths() {
+  const allProjects: CollectionEntry<"projects">[] = sortProjects(
+    await getCollection("projects"),
+  );
+
+  return allProjects.map((project) => ({
+    params: { id: project.id },
+    props: { project },
+  }));
+}
+
+const { project }: Props = Astro.props;
 
 const { Content } = await render(project);
 ---
 
-<Layout title={project.data.title} description={project.data.description}>
-    <div class="container mx-auto space-y-8 pt-18 px-6">
-        <button
-            class="flex gap-2 items-center text-secondary hover:text-primary cursor-pointer pl-2 my-6"
-            title="back"
-            id="back-button"
-        >
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="lucide lucide-move-left-icon lucide-move-left"
-                ><path d="M6 8L2 12L6 16"></path><path d="M2 12H22"></path></svg
+<Layout
+  title={project.data.title}
+  description={project.data.description}
+  image={project.data.image.url}
+  imageAlt={project.data.image.alt}
+>
+  <div class="container mx-auto space-y-8 px-6 pt-18">
+    <button
+      class="text-secondary hover:text-primary my-6 flex cursor-pointer items-center gap-2 pl-2"
+      title="back"
+      id="back-button"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="28"
+        height="28"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="lucide lucide-move-left-icon lucide-move-left"
+        ><path d="M6 8L2 12L6 16"></path><path d="M2 12H22"></path></svg
+      >
+      <span>Back</span>
+    </button>
+    <div
+      class="border-secondary flex flex-col justify-between gap-4 border-b border-dashed pb-4 md:flex-row md:items-center"
+    >
+      <div class="space-y-4">
+        <h1 class="heading text-3xl uppercase md:text-5xl">
+          {project.data.title}
+        </h1>
+        <p>{project.data.description}</p>
+      </div>
+
+      <div class="flex flex-col gap-4 sm:flex-row">
+        {
+          project.data.githubUrl && (
+            <a
+              href={project.data.githubUrl}
+              class="bg-primary hover:bg-background hover:outline-secondary hover:text-foreground flex w-full cursor-pointer items-center justify-center rounded-2xl px-6 py-3 transition hover:outline hover:outline-1 hover:outline-dashed sm:w-auto sm:px-10 sm:py-4"
             >
-            <span>Back</span>
-        </button>
-        <div
-            class="flex justify-between md:items-center pb-4 border-b border-dashed border-secondary gap-4 flex-col md:flex-row"
-        >
-            <div class="space-y-4">
-                <h1 class="heading text-3xl md:text-5xl uppercase">
-                    {project.data.title}
-                </h1>
-                <p>{project.data.description}</p>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-4">
-                <a
-                    href={project.data.githubUrl}
-                    class="w-full sm:w-auto flex items-center justify-center bg-primary rounded-2xl py-3 px-6 sm:py-4 sm:px-10 cursor-pointer hover:bg-background hover:outline hover:outline-1 hover:outline-dashed hover:outline-secondary hover:text-foreground transition"
-                >
-                    Source
-                </a>
-                <a
-                    href={project.data.liveUrl}
-                    class="w-full sm:w-auto flex items-center justify-center bg-foreground text-background rounded-2xl py-3 px-6 sm:py-4 sm:px-10 cursor-pointer hover:bg-background hover:outline hover:outline-1 hover:outline-dashed hover:outline-secondary hover:text-foreground transition"
-                >
-                    Live Demo
-                </a>
-            </div>
-        </div>
-
-        <div
-            class="w-full lg:h-[70vh] aspect-[610/400] overflow-hidden rounded-2xl"
-        >
-            <img
-                src={project.data.image.url}
-                alt={project.data.image.alt}
-                class="w-full h-full object-contain"
-            />
-        </div>
-        <article
-            class="px-3 flex-2 mx-auto border-b border-dashed border-secondary mb-18"
-        >
-            <Content />
-        </article>
+              Source
+            </a>
+          )
+        }
+        {
+          project.data.liveUrl && (
+            <a
+              href={project.data.liveUrl}
+              class="bg-foreground text-background hover:bg-background hover:outline-secondary hover:text-foreground flex w-full cursor-pointer items-center justify-center rounded-2xl px-6 py-3 transition hover:outline hover:outline-1 hover:outline-dashed sm:w-auto sm:px-10 sm:py-4"
+            >
+              Live Demo
+            </a>
+          )
+        }
+      </div>
     </div>
 
-    <script is:inline>
-        document.getElementById("back-button").addEventListener("click", () => {
-            window.history.back();
-        });
-    </script>
+    <div
+      class="aspect-[610/400] w-full overflow-hidden rounded-2xl lg:h-[70vh]"
+    >
+      <img
+        src={project.data.image.url}
+        alt={project.data.image.alt}
+        class="h-full w-full object-contain"
+      />
+    </div>
+    <article
+      class="border-secondary mx-auto mb-18 flex-2 border-b border-dashed px-3"
+    >
+      <Content />
+    </article>
+  </div>
+
+  <script is:inline>
+    const backButton = document.getElementById("back-button");
+
+    backButton?.addEventListener("click", () => {
+      window.history.back();
+    });
+  </script>
 </Layout>

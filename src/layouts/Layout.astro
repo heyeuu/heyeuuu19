@@ -6,32 +6,38 @@ import { SITE } from "@/consts";
 
 import "../styles/global.css";
 
-type Props = {
-    title: string;
-    description: string;
-    image?: string;
-};
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  imageAlt?: string;
+}
 
-const { title, description } = Astro.props;
+const { title, description, image, imageAlt }: Props = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
-    <Head title={`${title} | ${SITE.TITLE}`} description={description} />
-    <body>
-        <Header />
-        <div class="min-h-screen w-full relative">
-            <div
-                class="fixed inset-0 -z-50 bg-background"
-                style={{
-                    backgroundImage:
-                        "radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.10) 1px, transparent 0)",
-                    backgroundSize: "25px 25px",
-                }}
-            >
-            </div>
-            <slot />
-        </div>
-        <Footer />
-    </body>
+  <Head
+    title={`${title} | ${SITE.TITLE}`}
+    description={description}
+    image={image}
+    imageAlt={imageAlt}
+  />
+  <body>
+    <Header />
+    <div class="relative min-h-screen w-full">
+      <div
+        class="bg-background fixed inset-0 -z-50"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.10) 1px, transparent 0)",
+          backgroundSize: "25px 25px",
+        }}
+      >
+      </div>
+      <slot />
+    </div>
+    <Footer />
+  </body>
 </html>

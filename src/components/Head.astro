@@ -1,25 +1,56 @@
 ---
 import "@/styles/global.css";
 import { Font } from "astro:assets";
+import { SITE } from "@/consts";
 
 interface Props {
-    title: string;
-    description: string;
-    image?: string;
+  title: string;
+  description: string;
+  image?: string;
+  imageAlt?: string;
 }
 
-const { title, description, image = "/placeholder.png" } = Astro.props;
+const {
+  title,
+  description,
+  image = SITE.OG_IMAGE,
+  imageAlt = SITE.OG_IMAGE_ALT,
+}: Props = Astro.props;
+
+const hasConfiguredSiteUrl = SITE.URL !== "https://your_site.com";
+const canonicalUrl = hasConfiguredSiteUrl
+  ? new URL(Astro.url.pathname, SITE.URL).toString()
+  : undefined;
+const imageUrl = hasConfiguredSiteUrl
+  ? new URL(image, SITE.URL).toString()
+  : image;
 ---
 
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <meta name="generator" content={Astro.generator} />
+{canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
 <!-- Primary Meta Tags -->
 <title>{title}</title>
 <meta name="title" content={title} />
 <meta name="description" content={description} />
+
+<!-- Open Graph / Twitter -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={SITE.TITLE} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+{canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+<meta property="og:image" content={imageUrl} />
+<meta property="og:image:alt" content={imageAlt} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={imageUrl} />
+<meta name="twitter:image:alt" content={imageAlt} />
 
 <!-- fonts -->
 <Font cssVariable="--font-plex" preload />

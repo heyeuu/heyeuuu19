@@ -3,6 +3,8 @@ export const SITE = {
   TITLE: "Mono Lume",
   DESCRIPTION:
     "A full-stack developer with a strong focus on building fast, accessible, and maintainable web applications.",
+  OG_IMAGE: "/portrait.webp",
+  OG_IMAGE_ALT: "Portrait of Mono Lume",
   EMAIL: "hi@monolume.com",
 };
 
