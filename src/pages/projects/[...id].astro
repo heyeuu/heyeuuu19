@@ -61,18 +61,26 @@ const { Content } = await render(project);
       </div>
 
       <div class="flex flex-col gap-4 sm:flex-row">
-        <a
-          href={project.data.githubUrl}
-          class="bg-primary hover:bg-background hover:outline-secondary hover:text-foreground flex w-full cursor-pointer items-center justify-center rounded-2xl px-6 py-3 transition hover:outline hover:outline-1 hover:outline-dashed sm:w-auto sm:px-10 sm:py-4"
-        >
-          Source
-        </a>
-        <a
-          href={project.data.liveUrl}
-          class="bg-foreground text-background hover:bg-background hover:outline-secondary hover:text-foreground flex w-full cursor-pointer items-center justify-center rounded-2xl px-6 py-3 transition hover:outline hover:outline-1 hover:outline-dashed sm:w-auto sm:px-10 sm:py-4"
-        >
-          Live Demo
-        </a>
+        {
+          project.data.githubUrl && (
+            <a
+              href={project.data.githubUrl}
+              class="bg-primary hover:bg-background hover:outline-secondary hover:text-foreground flex w-full cursor-pointer items-center justify-center rounded-2xl px-6 py-3 transition hover:outline hover:outline-1 hover:outline-dashed sm:w-auto sm:px-10 sm:py-4"
+            >
+              Source
+            </a>
+          )
+        }
+        {
+          project.data.liveUrl && (
+            <a
+              href={project.data.liveUrl}
+              class="bg-foreground text-background hover:bg-background hover:outline-secondary hover:text-foreground flex w-full cursor-pointer items-center justify-center rounded-2xl px-6 py-3 transition hover:outline hover:outline-1 hover:outline-dashed sm:w-auto sm:px-10 sm:py-4"
+            >
+              Live Demo
+            </a>
+          )
+        }
       </div>
     </div>
 
