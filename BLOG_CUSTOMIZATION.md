@@ -127,7 +127,7 @@ export const SOCIALS = [
 - 社交链接标题
 - 页脚版权文案
 
-注意：页脚里显示的邮箱文本来自 `SITE.EMAIL`，但 `mailto:` 链接当前是写死的 `someone@example.com`。如果要改邮箱，请同时检查这个文件里的链接。
+注意：页脚里显示的邮箱文本和 `mailto:` 链接都来自 `SITE.EMAIL`，修改后会自动同步。
 
 ## 5. 修改博客文章
 
