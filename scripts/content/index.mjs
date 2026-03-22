@@ -28,8 +28,9 @@ if (!handler) {
 try {
   await handler(rest);
 } catch (error) {
-  process.stderr.write(`${error.message}\n`);
+  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
   process.exit(1);
+}
 }
 
 function printHelp() {
