@@ -77,6 +77,11 @@ export function sortTaxonomyGroupsByUsage(groups: TaxonomyGroup[]) {
   );
 }
 
+/**
+ * Returns posts belonging to a series, sorted in ascending date order.
+ * Note: If `series` is empty/falsy, this will match all posts without a series.
+ * Callers should guard against this if an empty result is desired for missing series.
+ */
 export function getSeriesPosts(posts: BlogEntry[], series: string) {
   const normalizedSeries = normalizeTaxonomyValue(series);
 
