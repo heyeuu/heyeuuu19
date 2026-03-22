@@ -1,5 +1,6 @@
 ---
 import Card from "./Card.astro";
+import EmptyCollectionState from "@/components/EmptyCollectionState.astro";
 
 import { getCollection, type CollectionEntry } from "astro:content";
 import { getPublishedBlogPosts } from "@/utils/blog";
@@ -9,7 +10,7 @@ const allPosts: CollectionEntry<"blog">[] = getPublishedBlogPosts(
 ).slice(0, 3);
 ---
 
-<section id="Projects" class="container mx-auto mt-18 px-6">
+<section id="Posts" class="container mx-auto mt-18 px-6">
   <div class="mb-12 overflow-hidden">
     <div class="animate-scroll flex">
       <div class="flex shrink-0 whitespace-nowrap">
@@ -32,9 +33,21 @@ const allPosts: CollectionEntry<"blog">[] = getPublishedBlogPosts(
       </div>
     </div>
   </div>
-  <ul class="not-prose flex flex-col gap-4">
-    {allPosts.map((post) => <Card entry={post} />)}
-  </ul>
+  {
+    allPosts.length > 0 ? (
+      <ul class="not-prose flex flex-col gap-4">
+        {allPosts.map((post) => <Card entry={post} />)}
+      </ul>
+    ) : (
+      <EmptyCollectionState
+        eyebrow="Archive Empty"
+        title="No published posts yet"
+        description="This section fills automatically once `src/content/blog` contains non-draft Markdown entries."
+        href="/blog"
+        linkLabel="Open the blog archive"
+      />
+    )
+  }
 </section>
 
 <style>

@@ -1,5 +1,6 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import EmptyCollectionState from "@/components/EmptyCollectionState.astro";
 import TaxonomyDirectory from "@/components/blog/TaxonomyDirectory.astro";
 import { getCollection } from "astro:content";
 import { getPublishedBlogPosts, getTagGroups } from "@/utils/blog";
@@ -35,11 +36,23 @@ const description =
       </div>
     </div>
 
-    <TaxonomyDirectory
-      title="All Tags"
-      description="Each tag groups posts by topic, so you can skim a specific subject without losing the overall archive."
-      groups={tagGroups}
-      kind="tag"
-    />
+    {
+      tagGroups.length > 0 ? (
+        <TaxonomyDirectory
+          title="All Tags"
+          description="Each tag groups posts by topic, so you can skim a specific subject without losing the overall archive."
+          groups={tagGroups}
+          kind="tag"
+        />
+      ) : (
+        <EmptyCollectionState
+          eyebrow="Tag Archive Empty"
+          title="No tags yet"
+          description="Tags appear automatically once published posts include a `tags` field in their frontmatter."
+          href="/blog"
+          linkLabel="Back to blog"
+        />
+      )
+    }
   </section>
 </Layout>

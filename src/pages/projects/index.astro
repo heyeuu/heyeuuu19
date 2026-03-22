@@ -1,6 +1,7 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import Card from "@/components/Card.astro";
+import EmptyCollectionState from "@/components/EmptyCollectionState.astro";
 import { getCollection, type CollectionEntry } from "astro:content";
 import { PROJECTS } from "@/consts";
 import { sortProjects } from "@/utils/projects";
@@ -14,8 +15,20 @@ const allProjects: CollectionEntry<"projects">[] =
     <h2 class="heading my-8 mr-4 text-5xl uppercase md:mr-8 md:text-9xl">
       work
     </h2>
-    <ul class="not-prose flex flex-col gap-4">
-      {allProjects.map((project) => <Card entry={project} />)}
-    </ul>
+    {
+      allProjects.length > 0 ? (
+        <ul class="not-prose flex flex-col gap-4">
+          {allProjects.map((project) => <Card entry={project} />)}
+        </ul>
+      ) : (
+        <EmptyCollectionState
+          eyebrow="Work In Progress"
+          title="No projects published yet"
+          description="The projects index is live, but `src/content/projects` is currently empty."
+          href="/"
+          linkLabel="Back to home"
+        />
+      )
+    }
   </section>
 </Layout>

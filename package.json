@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "build:force": "astro build --force",
     "preview": "astro preview",
     "astro": "astro",
     "content": "node ./scripts/content/index.mjs",

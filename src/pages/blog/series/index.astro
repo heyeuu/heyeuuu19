@@ -1,5 +1,6 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import EmptyCollectionState from "@/components/EmptyCollectionState.astro";
 import TaxonomyDirectory from "@/components/blog/TaxonomyDirectory.astro";
 import { getCollection } from "astro:content";
 import { getPublishedBlogPosts, getSeriesGroups } from "@/utils/blog";
@@ -35,11 +36,23 @@ const description =
       </div>
     </div>
 
-    <TaxonomyDirectory
-      title="All Series"
-      description="Series are ordered by their most recent update, so active threads stay near the top."
-      groups={seriesGroups}
-      kind="series"
-    />
+    {
+      seriesGroups.length > 0 ? (
+        <TaxonomyDirectory
+          title="All Series"
+          description="Series are ordered by their most recent update, so active threads stay near the top."
+          groups={seriesGroups}
+          kind="series"
+        />
+      ) : (
+        <EmptyCollectionState
+          eyebrow="Series Archive Empty"
+          title="No series yet"
+          description="Series show up automatically once published posts share the same `series` value in frontmatter."
+          href="/blog"
+          linkLabel="Back to blog"
+        />
+      )
+    }
   </section>
 </Layout>
