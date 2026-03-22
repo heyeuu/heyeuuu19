@@ -22,7 +22,11 @@ export async function getStaticPaths() {
   }));
 }
 
-const { group } = Astro.props as { group: TaxonomyGroup };
+interface Props {
+  group: TaxonomyGroup;
+}
+
+const { group }: Props = Astro.props;
 const tagGroups = getTagGroups(group.posts);
 const description = `Posts in the ${group.name} series.`;
 ---
