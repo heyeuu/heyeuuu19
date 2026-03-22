@@ -101,6 +101,8 @@ function collectTaxonomyGroups(
   const groups = new Map<string, TaxonomyGroup>();
 
   for (const post of posts) {
+    const seenSlugs = new Set<string>();
+
     for (const rawValue of selectValues(post)) {
       const name = normalizeTaxonomyValue(rawValue);
 
@@ -109,6 +111,12 @@ function collectTaxonomyGroups(
       }
 
       const slug = toTaxonomySlug(name);
+
+      if (seenSlugs.has(slug)) {
+        continue;
+      }
+
+      seenSlugs.add(slug);
       const existingGroup = groups.get(slug);
 
       if (existingGroup) {

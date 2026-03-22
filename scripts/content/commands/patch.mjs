@@ -95,6 +95,10 @@ function parseAssignment(input) {
     throw new Error(`Invalid assignment path: ${input}`);
   }
 
+  if (rawValue === "") {
+    return { path, remove: false, value: "" };
+  }
+
   if (rawValue === "null") {
     return { path, remove: true };
   }

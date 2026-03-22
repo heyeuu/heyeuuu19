@@ -31,7 +31,6 @@ try {
   process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
   process.exit(1);
 }
-}
 
 function printHelp() {
   process.stdout.write(`Content CLI
