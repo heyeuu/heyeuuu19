@@ -1,12 +1,17 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
+import MetadataPills from "@/components/blog/MetadataPills.astro";
+import SeriesPosts from "@/components/blog/SeriesPosts.astro";
 import FormattedDate from "@/components/FormattedDate.astro";
+import {
+  getPublishedBlogPosts,
+  getSeriesPosts,
+  sortBlogPosts,
+} from "@/utils/blog";
 
 export async function getStaticPaths() {
-  const posts = (await getCollection("blog"))
-    .filter((post) => !post.data.draft)
-    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  const posts = getPublishedBlogPosts(await getCollection("blog"));
   return posts.map((post) => ({
     params: { id: post.id },
     props: post,
@@ -14,18 +19,28 @@ export async function getStaticPaths() {
 }
 type Props = CollectionEntry<"blog">;
 
-const post = Astro.props;
+const post = Astro.props as Props;
+const allPosts = getPublishedBlogPosts(await getCollection("blog"));
+const seriesPosts = post.data.series
+  ? getSeriesPosts(allPosts, post.data.series)
+  : [];
+const relatedPosts = sortBlogPosts(
+  allPosts.filter((entry) => {
+    if (entry.id === post.id) {
+      return false;
+    }
+
+    const currentTags = post.data.tags ?? [];
+    const nextTags = entry.data.tags ?? [];
+    return nextTags.some((tag) => currentTags.includes(tag));
+  }),
+).slice(0, 3);
 
 const { Content } = await render(post);
 ---
 
-<Layout
-  title={post.data.title}
-  description={post.data.description}
-  image={post.data.image?.url}
-  imageAlt={post.data.image?.alt}
->
-  <div class="container mx-auto space-y-8 px-6 pt-18">
+<Layout title={post.data.title} description={post.data.description}>
+  <div class="container mx-auto space-y-10 px-6 pt-18">
     <button
       class="text-secondary hover:text-primary my-6 flex cursor-pointer items-center gap-2 pl-2"
       title="back"
@@ -47,16 +62,37 @@ const { Content } = await render(post);
       <span>Back</span>
     </button>
     <div
-      class="border-secondary flex flex-col justify-between gap-4 border-b border-dashed pb-4 md:flex-row md:items-center"
+      class="border-secondary flex flex-col gap-4 border-b border-dashed pb-6 md:flex-row md:items-end md:justify-between"
     >
-      <div class="space-y-4">
-        <h1 class="heading text-3xl uppercase md:text-5xl">
-          {post.data.title}
-        </h1>
-        <p>{post.data.description}</p>
-        <p class="text-secondary">
-          <FormattedDate date={post.data.date} />
-        </p>
+      <div class="space-y-5">
+        <div class="space-y-4">
+          <h1 class="heading text-3xl uppercase md:text-5xl">
+            {post.data.title}
+          </h1>
+          <p class="max-w-3xl">{post.data.description}</p>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <p class="text-secondary">
+            <FormattedDate date={post.data.date} />
+          </p>
+          <MetadataPills tags={post.data.tags} series={post.data.series} />
+        </div>
+      </div>
+
+      <div class="text-secondary flex flex-wrap gap-3 text-sm">
+        <a
+          href="/blog/tags"
+          class="hover:text-foreground underline decoration-dashed underline-offset-4 transition-colors"
+        >
+          All tags
+        </a>
+        <a
+          href="/blog/series"
+          class="hover:text-foreground underline decoration-dashed underline-offset-4 transition-colors"
+        >
+          All series
+        </a>
       </div>
     </div>
     {
@@ -74,12 +110,51 @@ const { Content } = await render(post);
     <article class="mx-auto mb-18 flex-2 px-3">
       <Content />
     </article>
+
+    {
+      seriesPosts.length > 1 && (
+        <SeriesPosts
+          posts={seriesPosts}
+          currentId={post.id}
+          description={`Continue through the ${post.data.series} series in reading order.`}
+        />
+      )
+    }
+
+    {
+      relatedPosts.length > 0 && (
+        <section class="border-secondary/60 bg-background/90 space-y-5 rounded-[2rem] border border-dashed p-6 md:p-8">
+          <div class="space-y-2">
+            <p class="text-secondary text-xs tracking-[0.3em] uppercase">
+              Related Topics
+            </p>
+            <h2 class="heading text-2xl uppercase md:text-4xl">
+              More With Similar Tags
+            </h2>
+          </div>
+
+          <ul class="not-prose flex flex-col gap-4">
+            {relatedPosts.map((entry) => (
+              <li class="border-secondary/50 border-b border-dashed pb-4 last:border-b-0">
+                <a
+                  href={`/blog/${entry.id}`}
+                  class="text-foreground hover:text-secondary space-y-2 transition-colors"
+                >
+                  <p class="heading text-xl uppercase">{entry.data.title}</p>
+                  <p class="text-secondary max-w-3xl">
+                    {entry.data.description}
+                  </p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
   </div>
 
   <script is:inline>
-    const backButton = document.getElementById("back-button");
-
-    backButton?.addEventListener("click", () => {
+    document.getElementById("back-button").addEventListener("click", () => {
       window.history.back();
     });
   </script>

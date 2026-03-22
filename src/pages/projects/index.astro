@@ -5,9 +5,8 @@ import { getCollection, type CollectionEntry } from "astro:content";
 import { PROJECTS } from "@/consts";
 import { sortProjects } from "@/utils/projects";
 
-const allProjects: CollectionEntry<"projects">[] = sortProjects(
-  await getCollection("projects"),
-);
+const allProjects: CollectionEntry<"projects">[] =
+  await getCollection("projects");
 ---
 
 <Layout title={PROJECTS.TITLE} description={PROJECTS.DESCRIPTION}>
@@ -15,6 +14,8 @@ const allProjects: CollectionEntry<"projects">[] = sortProjects(
     <h2 class="heading my-8 mr-4 text-5xl uppercase md:mr-8 md:text-9xl">
       work
     </h2>
-    {allProjects.map((project) => <Card entry={project} />)}
+    <ul class="not-prose flex flex-col gap-4">
+      {allProjects.map((project) => <Card entry={project} />)}
+    </ul>
   </section>
 </Layout>

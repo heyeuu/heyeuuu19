@@ -1,0 +1,43 @@
+---
+type Props = {
+  href: string;
+  label: string;
+  kind: "tag" | "series";
+  count?: number;
+  compact?: boolean;
+  current?: boolean;
+};
+
+const {
+  href,
+  label,
+  kind,
+  count,
+  compact = false,
+  current = false,
+} = Astro.props;
+---
+
+<a
+  href={href}
+  class:list={[
+    "inline-flex items-center gap-2 rounded-full border border-dashed transition-colors",
+    compact ? "px-3 py-1 text-xs" : "px-4 py-2 text-sm",
+    kind === "series"
+      ? current
+        ? "border-foreground bg-primary text-foreground"
+        : "border-foreground/40 bg-primary/55 text-foreground hover:bg-primary"
+      : current
+        ? "border-foreground bg-foreground text-background"
+        : "border-secondary bg-background/90 text-secondary hover:border-foreground/50 hover:bg-primary/15 hover:text-foreground",
+  ]}
+>
+  <span class="font-medium">{kind === "tag" ? `#${label}` : label}</span>
+  {
+    typeof count === "number" && (
+      <span class="bg-foreground/8 rounded-full px-2 py-0.5 text-[11px] text-current">
+        {count}
+      </span>
+    )
+  }
+</a>

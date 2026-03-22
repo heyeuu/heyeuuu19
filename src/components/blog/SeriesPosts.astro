@@ -1,0 +1,77 @@
+---
+import FormattedDate from "@/components/FormattedDate.astro";
+import type { BlogEntry } from "@/utils/blog";
+
+type Props = {
+  posts: BlogEntry[];
+  currentId?: string;
+  title?: string;
+  description?: string;
+};
+
+const {
+  posts,
+  currentId,
+  title = "In This Series",
+  description = "Read the connected posts in order.",
+} = Astro.props as Props;
+---
+
+{
+  posts.length > 0 && (
+    <section class="border-secondary/60 bg-background/90 space-y-5 rounded-[2rem] border border-dashed p-6 md:p-8">
+      <div class="space-y-2">
+        <p class="text-secondary text-xs tracking-[0.3em] uppercase">Series</p>
+        <h2 class="heading text-2xl uppercase md:text-4xl">{title}</h2>
+        <p class="text-secondary max-w-2xl">{description}</p>
+      </div>
+
+      <ol class="space-y-3">
+        {posts.map((entry, index) => {
+          const isCurrentPost = entry.id === currentId;
+
+          return (
+            <li
+              class:list={[
+                "rounded-[1.5rem] border border-dashed p-4 transition-colors",
+                isCurrentPost
+                  ? "border-foreground bg-primary/45"
+                  : "border-secondary/60 bg-background/70",
+              ]}
+            >
+              <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div class="flex gap-4">
+                  <span class="heading text-secondary text-xl">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div class="space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <a
+                        href={`/blog/${entry.id}`}
+                        class="text-foreground text-lg font-semibold underline-offset-4 hover:underline"
+                      >
+                        {entry.data.title}
+                      </a>
+                      {isCurrentPost && (
+                        <span class="border-foreground/60 rounded-full border border-dashed px-2 py-1 text-[11px] tracking-[0.25em] uppercase">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <p class="text-secondary max-w-2xl text-sm">
+                      {entry.data.description}
+                    </p>
+                  </div>
+                </div>
+
+                <p class="text-secondary shrink-0 text-sm">
+                  <FormattedDate date={entry.data.date} />
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  )
+}

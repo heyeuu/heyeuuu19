@@ -1,0 +1,45 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import TaxonomyDirectory from "@/components/blog/TaxonomyDirectory.astro";
+import { getCollection } from "astro:content";
+import { getPublishedBlogPosts, getTagGroups } from "@/utils/blog";
+
+const posts = getPublishedBlogPosts(await getCollection("blog"));
+const tagGroups = getTagGroups(posts);
+const description =
+  "Browse every blog tag and jump straight to the topics you care about.";
+---
+
+<Layout title="Tags" description={description}>
+  <section class="container mx-auto space-y-10 px-6 pt-18">
+    <div class="space-y-5">
+      <a
+        href="/blog"
+        class="text-secondary hover:text-foreground inline-flex text-sm underline decoration-dashed underline-offset-4 transition-colors"
+      >
+        Back to blog
+      </a>
+
+      <div
+        class="border-secondary/60 bg-background/85 space-y-4 rounded-[2rem] border border-dashed p-6 md:p-8"
+      >
+        <p class="text-secondary text-xs tracking-[0.3em] uppercase">
+          Tag Archive
+        </p>
+        <h1 class="heading text-4xl uppercase md:text-6xl">Tags</h1>
+        <p class="text-secondary max-w-3xl">{description}</p>
+        <div class="text-secondary flex flex-wrap gap-6 text-sm">
+          <span>{tagGroups.length} tags</span>
+          <span>{posts.length} published posts</span>
+        </div>
+      </div>
+    </div>
+
+    <TaxonomyDirectory
+      title="All Tags"
+      description="Each tag groups posts by topic, so you can skim a specific subject without losing the overall archive."
+      groups={tagGroups}
+      kind="tag"
+    />
+  </section>
+</Layout>

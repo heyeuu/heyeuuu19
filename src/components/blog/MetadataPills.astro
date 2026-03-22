@@ -1,0 +1,50 @@
+---
+import TaxonomyLink from "@/components/blog/TaxonomyLink.astro";
+import { getSeriesPath, getTagPath } from "@/utils/blog";
+
+type Props = {
+  tags?: string[];
+  series?: string;
+  compact?: boolean;
+  currentTag?: string;
+  currentSeries?: string;
+};
+
+const {
+  tags = [],
+  series,
+  compact = false,
+  currentTag,
+  currentSeries,
+} = Astro.props;
+
+const normalizedTags = [
+  ...new Set(tags.map((tag) => tag.trim()).filter(Boolean)),
+];
+const hasMetadata = Boolean(series) || normalizedTags.length > 0;
+---
+
+{
+  hasMetadata && (
+    <div class="flex flex-wrap items-center gap-2">
+      {series && (
+        <TaxonomyLink
+          href={getSeriesPath(series)}
+          label={series}
+          kind="series"
+          compact={compact}
+          current={currentSeries === series}
+        />
+      )}
+      {normalizedTags.map((tag) => (
+        <TaxonomyLink
+          href={getTagPath(tag)}
+          label={tag}
+          kind="tag"
+          compact={compact}
+          current={currentTag === tag}
+        />
+      ))}
+    </div>
+  )
+}

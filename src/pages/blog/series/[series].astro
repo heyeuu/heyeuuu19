@@ -1,0 +1,89 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import MetadataPills from "@/components/blog/MetadataPills.astro";
+import SeriesPosts from "@/components/blog/SeriesPosts.astro";
+import TaxonomyLink from "@/components/blog/TaxonomyLink.astro";
+import { getCollection } from "astro:content";
+import {
+  getPublishedBlogPosts,
+  getSeriesGroups,
+  getSeriesPath,
+  getTagGroups,
+  type TaxonomyGroup,
+} from "@/utils/blog";
+
+export async function getStaticPaths() {
+  const posts = getPublishedBlogPosts(await getCollection("blog"));
+  const seriesGroups = getSeriesGroups(posts);
+
+  return seriesGroups.map((group) => ({
+    params: { series: group.slug },
+    props: { group },
+  }));
+}
+
+const { group } = Astro.props as { group: TaxonomyGroup };
+const tagGroups = getTagGroups(group.posts);
+const description = `Posts in the ${group.name} series.`;
+---
+
+<Layout title={`Series: ${group.name}`} description={description}>
+  <section class="container mx-auto space-y-10 px-6 pt-18">
+    <div class="space-y-5">
+      <a
+        href="/blog/series"
+        class="text-secondary hover:text-foreground inline-flex text-sm underline decoration-dashed underline-offset-4 transition-colors"
+      >
+        All series
+      </a>
+
+      <div
+        class="border-secondary/60 bg-primary/45 space-y-5 rounded-[2rem] border border-dashed p-6 md:p-8"
+      >
+        <div class="space-y-3">
+          <p class="text-secondary text-xs tracking-[0.3em] uppercase">
+            Series Archive
+          </p>
+          <h1 class="heading text-4xl uppercase md:text-6xl">{group.name}</h1>
+          <p class="text-secondary max-w-3xl">
+            {group.postCount}
+            {group.postCount === 1 ? "post" : "posts"} in this series, ordered from
+            earliest to latest.
+          </p>
+        </div>
+
+        <TaxonomyLink
+          href={getSeriesPath(group.name)}
+          label={group.name}
+          kind="series"
+          count={group.postCount}
+          current={true}
+        />
+      </div>
+    </div>
+
+    {
+      tagGroups.length > 0 && (
+        <section class="border-secondary/60 bg-background/85 space-y-4 rounded-[2rem] border border-dashed p-6 md:p-8">
+          <div class="space-y-2">
+            <p class="text-secondary text-xs tracking-[0.3em] uppercase">
+              Topics
+            </p>
+            <h2 class="heading text-2xl uppercase md:text-4xl">Common Tags</h2>
+            <p class="text-secondary max-w-3xl">
+              These tags show the themes that recur across the series.
+            </p>
+          </div>
+
+          <MetadataPills tags={tagGroups.map((tagGroup) => tagGroup.name)} />
+        </section>
+      )
+    }
+
+    <SeriesPosts
+      posts={group.posts}
+      title={group.name}
+      description="Follow the posts below in order."
+    />
+  </section>
+</Layout>

@@ -32,7 +32,9 @@ const allProjects: CollectionEntry<"projects">[] = sortProjects(
       </div>
     </div>
   </div>
-  {allProjects.map((project) => <Card entry={project} />)}
+  <ul class="not-prose flex flex-col gap-4">
+    {allProjects.map((project) => <Card entry={project} />)}
+  </ul>
 </section>
 
 <style>
