@@ -12,6 +12,7 @@ import {
   getAllFlags,
   getFlag,
   listContentFiles,
+  normalizeCollectionKey,
   parseArgs,
   relativeContentPath,
   setValueAtPath,
@@ -103,16 +104,4 @@ function parseAssignment(input) {
     remove: false,
     value: YAML.parse(rawValue),
   };
-}
-
-function normalizeCollectionKey(value) {
-  if (!value) {
-    return undefined;
-  }
-
-  if (value === "project") {
-    return "projects";
-  }
-
-  return value;
 }

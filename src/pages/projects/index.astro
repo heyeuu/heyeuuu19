@@ -8,6 +8,7 @@ import { sortProjects } from "@/utils/projects";
 
 const allProjects: CollectionEntry<"projects">[] =
   await getCollection("projects");
+const allProjectsSorted = sortProjects(allProjects);
 ---
 
 <Layout title={PROJECTS.TITLE} description={PROJECTS.DESCRIPTION}>
@@ -16,9 +17,11 @@ const allProjects: CollectionEntry<"projects">[] =
       work
     </h2>
     {
-      allProjects.length > 0 ? (
+      allProjectsSorted.length > 0 ? (
         <ul class="not-prose flex flex-col gap-4">
-          {allProjects.map((project) => <Card entry={project} />)}
+          {allProjectsSorted.map((project) => (
+            <Card entry={project} />
+          ))}
         </ul>
       ) : (
         <EmptyCollectionState

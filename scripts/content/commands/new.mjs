@@ -7,6 +7,7 @@ import { getCollection } from "../core/collections.mjs";
 import {
   getFlag,
   isValidSlug,
+  normalizeCollectionKey,
   parseArgs,
   slugify,
   today,
@@ -151,18 +152,6 @@ async function askQuestions(initialValues) {
     slug: response.slug ?? initialValues.slug,
     format: initialValues.format ?? response.format ?? "md",
   };
-}
-
-function normalizeCollectionKey(value) {
-  if (!value) {
-    return undefined;
-  }
-
-  if (value === "project") {
-    return "projects";
-  }
-
-  return value;
 }
 
 function normalizeFormat(value) {

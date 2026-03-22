@@ -51,6 +51,18 @@ export function getAllFlags(flags, key) {
   return Array.isArray(value) ? value : [value];
 }
 
+export function normalizeCollectionKey(value) {
+  if (!value) {
+    return undefined;
+  }
+
+  if (value === "project") {
+    return "projects";
+  }
+
+  return value;
+}
+
 export function slugify(input) {
   return input
     .normalize("NFKD")

@@ -11,6 +11,7 @@ import {
   getFlag,
   isValidSlug,
   listContentFiles,
+  normalizeCollectionKey,
   parseArgs,
   relativeContentPath,
 } from "../core/utils.mjs";
@@ -85,16 +86,4 @@ function validateContentId(relativePath, contentId) {
   }
 
   return issues;
-}
-
-function normalizeCollectionKey(value) {
-  if (!value) {
-    return undefined;
-  }
-
-  if (value === "project") {
-    return "projects";
-  }
-
-  return value;
 }
