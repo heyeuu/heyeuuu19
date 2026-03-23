@@ -1,6 +1,12 @@
 import YAML from "yaml";
 
-export function parseMarkdownFile(source) {
+import { isPlainObject, type FrontmatterObject } from "./types.ts";
+
+export function parseMarkdownFile(source: string): {
+  data: FrontmatterObject;
+  body: string;
+  hasFrontmatter: boolean;
+} {
   const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
 
   if (!match) {
@@ -26,16 +32,19 @@ export function parseMarkdownFile(source) {
   };
 }
 
-export function stringifyMarkdownFile(data, body) {
+export function stringifyMarkdownFile(
+  data: FrontmatterObject,
+  body: string,
+): string {
   const frontmatter = YAML.stringify(data).trimEnd();
   const normalizedBody = body.startsWith("\n") ? body.slice(1) : body;
   return `---\n${frontmatter}\n---\n\n${normalizedBody}`;
 }
 
-function parseFrontmatterObject(frontmatterSource) {
+function parseFrontmatterObject(frontmatterSource: string): FrontmatterObject {
   try {
     return ensureObject(YAML.parse(frontmatterSource) ?? {});
-  } catch (error) {
+  } catch (error: unknown) {
     const repairedSource = repairLooseObjectBlocks(frontmatterSource);
     if (repairedSource === frontmatterSource) {
       throw error;
@@ -45,25 +54,26 @@ function parseFrontmatterObject(frontmatterSource) {
   }
 }
 
-function ensureObject(parsed) {
-  if (typeof parsed !== "object" || Array.isArray(parsed)) {
+function ensureObject(parsed: unknown): FrontmatterObject {
+  if (!isPlainObject(parsed)) {
     throw new Error("Frontmatter must be a YAML object.");
   }
 
   return parsed;
 }
 
-function repairLooseObjectBlocks(frontmatterSource) {
+function repairLooseObjectBlocks(frontmatterSource: string): string {
   const lines = frontmatterSource.split(/\r?\n/);
-  const repaired = [];
-  let looseObjectIndent = null;
+  const repaired: string[] = [];
+  let looseObjectIndent: string | null = null;
 
   for (const line of lines) {
     if (looseObjectIndent === null) {
       const openMatch = line.match(/^(\s*[^:#]+:\s*)\{\s*$/);
       if (openMatch) {
         repaired.push(openMatch[1].trimEnd());
-        looseObjectIndent = `${" ".repeat(openMatch[1].match(/^\s*/)[0].length + 2)}`;
+        const leadingWhitespace = openMatch[1].match(/^\s*/)?.[0] ?? "";
+        looseObjectIndent = `${" ".repeat(leadingWhitespace.length + 2)}`;
         continue;
       }
 

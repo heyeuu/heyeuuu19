@@ -2,29 +2,44 @@ import fs from "node:fs/promises";
 
 import YAML from "yaml";
 
-import { getCollection, normalizeFrontmatter } from "../core/collections.mjs";
+import { getCollection, normalizeFrontmatter } from "../core/collections.ts";
 import {
   parseMarkdownFile,
   stringifyMarkdownFile,
-} from "../core/frontmatter.mjs";
+} from "../core/frontmatter.ts";
 import {
   deleteValueAtPath,
   formatIssue,
-  getAllFlags,
+  getAllStringFlags,
   getFlag,
+  getStringFlag,
   listContentFiles,
   normalizeCollectionKey,
   parseArgs,
   relativeContentPath,
   setValueAtPath,
-} from "../core/utils.mjs";
+} from "../core/utils.ts";
+import type { FrontmatterObject, FrontmatterValue } from "../core/types.ts";
 
 const MISSING_VALUE = Symbol("missing-value");
 
-export async function runPatch(argv) {
+type SetOperation = {
+  path: string;
+  remove: false;
+  value: FrontmatterValue;
+};
+
+type RemoveOperation = {
+  path: string;
+  remove: true;
+};
+
+type PatchOperation = SetOperation | RemoveOperation;
+
+export async function runPatch(argv: string[]): Promise<void> {
   const { flags } = parseArgs(argv);
-  const collectionKey = normalizeCollectionKey(getFlag(flags, "type"));
-  const assignments = getAllFlags(flags, "set");
+  const collectionKey = normalizeCollectionKey(getStringFlag(flags, "type"));
+  const assignments = getAllStringFlags(flags, "set");
   const dryRun = Boolean(getFlag(flags, "dry-run"));
 
   if (!collectionKey) {
@@ -38,8 +53,8 @@ export async function runPatch(argv) {
   const collection = getCollection(collectionKey);
   const files = await listContentFiles(collection.directory);
   const operations = assignments.map(parseAssignment);
-  const changedFiles = [];
-  const pendingWrites = [];
+  const changedFiles: string[] = [];
+  const pendingWrites: Array<{ filePath: string; nextSource: string }> = [];
 
   for (const filePath of files) {
     const source = await fs.readFile(filePath, "utf8");
@@ -118,7 +133,7 @@ export async function runPatch(argv) {
   }
 }
 
-function parseAssignment(input) {
+function parseAssignment(input: string): PatchOperation {
   const separatorIndex = input.indexOf("=");
   if (separatorIndex <= 0) {
     throw new Error(`Invalid assignment: ${input}`);
@@ -142,13 +157,16 @@ function parseAssignment(input) {
   return {
     path,
     remove: false,
-    value: YAML.parse(rawValue),
+    value: YAML.parse(rawValue) as FrontmatterValue,
   };
 }
 
-function getValidationOperations(operations, target) {
+function getValidationOperations(
+  operations: PatchOperation[],
+  target: FrontmatterObject,
+): SetOperation[] {
   const seenPaths = new Set();
-  const validationOperations = [];
+  const validationOperations: SetOperation[] = [];
 
   for (let index = operations.length - 1; index >= 0; index -= 1) {
     const operation = operations[index];
@@ -174,37 +192,31 @@ function getValidationOperations(operations, target) {
   return validationOperations;
 }
 
-function getValueAtPath(target, dottedPath) {
+function getValueAtPath(
+  target: unknown,
+  dottedPath: string,
+): FrontmatterValue | typeof MISSING_VALUE {
   const keys = dottedPath.split(".");
-  let current = target;
+  let current: unknown = target;
 
   for (const key of keys) {
-    if (!current || typeof current !== "object" || !(key in current)) {
+    if (!isRecord(current) || !(key in current)) {
       return MISSING_VALUE;
     }
 
     current = current[key];
   }
 
-  return current;
+  return current as FrontmatterValue;
 }
 
-function isDeepEqual(left, right) {
+function isDeepEqual(left: unknown, right: unknown): boolean {
   if (Object.is(left, right)) {
     return true;
   }
 
   if (left instanceof Date && right instanceof Date) {
     return left.valueOf() === right.valueOf();
-  }
-
-  if (
-    !left ||
-    !right ||
-    typeof left !== "object" ||
-    typeof right !== "object"
-  ) {
-    return false;
   }
 
   if (Array.isArray(left) || Array.isArray(right)) {
@@ -219,6 +231,10 @@ function isDeepEqual(left, right) {
     return left.every((item, index) => isDeepEqual(item, right[index]));
   }
 
+  if (!left || !right || !isRecord(left) || !isRecord(right)) {
+    return false;
+  }
+
   const leftKeys = Object.keys(left);
   const rightKeys = Object.keys(right);
 
@@ -231,10 +247,14 @@ function isDeepEqual(left, right) {
   );
 }
 
-function formatValue(value) {
+function formatValue(value: unknown): string {
   if (value instanceof Date) {
     return value.toISOString();
   }
 
-  return JSON.stringify(value);
+  return JSON.stringify(value) ?? String(value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
