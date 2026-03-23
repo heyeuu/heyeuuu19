@@ -1,17 +1,50 @@
 export const SITE = {
-  URL: "https://your_site.com",
-  TITLE: "Mono Lume",
+  URL: "https://me.heyeuuu19.com",
+  TITLE: "Liu Heyi",
   DESCRIPTION:
-    "A full-stack developer with a strong focus on building fast, accessible, and maintainable web applications.",
-  OG_IMAGE: "/portrait.webp",
-  OG_IMAGE_ALT: "Portrait of Mono Lume",
-  EMAIL: "hi@monolume.com",
+    "A website of a girl who aspires to be a full-stack developer, using technology to bring the fun ideas popping out of her head to life.",
+  OG_IMAGE: "/liuheyi.jpg",
+  OG_IMAGE_ALT: "Portrait of Liu Heyi",
+  EMAIL: "heyeuuu19@gmail.com",
 };
 
 export const HOME = {
   TITLE: "Home",
   DESCRIPTION:
     "A personal blog about coding, building projects, and figuring things out",
+  HERO_SUBTITLE:
+    "A girl who aspires to be a full-stack developer, using technology to bring the fun ideas popping out of her head to life.",
+  HERO_PRIMARY_CTA: {
+    LABEL: "View Work",
+    HREF: "/projects",
+  },
+  HERO_SECONDARY_CTA: {
+    LABEL: "Hire me",
+    HREF: "#Contact",
+  },
+};
+
+export const ABOUT = {
+  TITLE: "About me",
+  IMAGE: {
+    SRC: "/liuheyi.jpg",
+    ALT: "About Me Image",
+  },
+  PARAGRAPHS: [
+    "I am an Undergraduate at Nanjing University of Science and Technology (NJUST), graduating in 2027. Currently, I am a core member of the RoboMaster Team (Alliance), specializing in computer vision algorithms for autonomous aiming systems.",
+    "I am passionate about leveraging Modern C++ to build high-performance, low-latency solutions. Outside of robotics, I enjoy exploring independent software projects and stay committed to writing clean, maintainable code",
+  ],
+  SKILLS_TITLE: "My Skills",
+  SKILLS: [
+    "YOLO",
+    "机器人",
+    "计算机视觉",
+    "ROS2",
+    "C/C++",
+    "Rust",
+    "Python",
+    "JUST DO IT!",
+  ],
 };
 
 export const BLOG = {
@@ -28,15 +61,11 @@ export const PROJECTS = {
 
 export const SOCIALS = [
   {
-    NAME: "X",
-    HREF: "https://x.com/your_username",
-  },
-  {
-    NAME: "Linkedin",
-    HREF: "https://linkedin.com/",
+    NAME: "Email",
+    HREF: "mailto:heyeuuu19@gmail.com",
   },
   {
     NAME: "Github",
-    HREF: "https://github.com/your_username",
+    HREF: "https://github.com/heyeuu",
   },
 ];
