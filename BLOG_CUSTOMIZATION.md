@@ -17,7 +17,6 @@
 - `scripts/content/`：内容 CLI（new/check/patch）
 - `public/`：静态资源（头像、项目图、favicon 等）
 
->>>>>>> 47c5d46 (update:update BLOG_CUSTOMIZATION.md)
 ## 2. 本地预览
 
 ```bash
