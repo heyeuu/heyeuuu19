@@ -80,15 +80,6 @@ export async function runNew(argv: string[]): Promise<void> {
     `${resolvedSlug}.${answers.format}`,
   );
 
-  try {
-    await fs.access(filePath);
-    throw new Error(`File already exists: ${filePath}`);
-  } catch (error: unknown) {
-    if (getErrorCode(error) !== "ENOENT") {
-      throw error;
-    }
-  }
-
   const content = collection.createTemplate({
     title: answers.title.trim(),
     slug: resolvedSlug,
@@ -101,7 +92,16 @@ export async function runNew(argv: string[]): Promise<void> {
   }
 
   await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await fs.writeFile(filePath, content, "utf8");
+
+  try {
+    await fs.writeFile(filePath, content, { encoding: "utf8", flag: "wx" });
+  } catch (error: unknown) {
+    if (getErrorCode(error) === "EEXIST") {
+      throw new Error(`File already exists: ${filePath}`);
+    }
+
+    throw error;
+  }
 
   process.stdout.write(
     [
