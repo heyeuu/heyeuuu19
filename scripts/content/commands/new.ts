@@ -137,9 +137,15 @@ async function askQuestions(
       type: "text",
       name: "slug",
       message: "确认 slug",
-      initial: (_previous, previousAnswers) =>
-        initialValues.slug ??
-        slugify(initialValues.title ?? previousAnswers.title ?? ""),
+      initial: (_previous, previousAnswers) => {
+        const sourceTitle = initialValues.title?.trim()
+          ? initialValues.title.trim()
+          : previousAnswers.title?.trim()
+            ? previousAnswers.title.trim()
+            : "";
+
+        return initialValues.slug ?? slugify(sourceTitle);
+      },
       validate: (value) =>
         isValidSlug(value.trim())
           ? true
@@ -166,7 +172,9 @@ async function askQuestions(
     collectionKey: initialValues.collectionKey ?? response.collectionKey,
     title: initialValues.title?.trim() ? initialValues.title : response.title,
     slug: response.slug ?? initialValues.slug,
-    format: initialValues.format ?? response.format,
+    format: initialValues.format?.trim()
+      ? initialValues.format
+      : response.format,
   };
 }
 
