@@ -1,27 +1,24 @@
 ---
-import { SITE } from "@/consts";
+import { HOME, SITE } from "@/consts";
 ---
 
 <section
-    class="grid grid-cols-1 lg:grid-cols-2 items-center container mx-auto min-h-screen p-6 md:gap-16 gap-8 pt-18"
+  class="container mx-auto grid min-h-screen grid-cols-1 items-center gap-8 p-6 pt-18 md:gap-16 lg:grid-cols-2"
 >
-    <h1 class="heading text-[clamp(6rem,20vw,12.5rem)] uppercase">
-        {SITE.TITLE}
-    </h1>
-    <div class="space-y-8">
-        <p class="text-2xl text-secondary">
-            A full-stack developer with a strong focus on building fast,
-            accessible, and maintainable web applications.
-        </p>
-        <div class="flex flex-col md:flex-row gap-2.5">
-            <a
-                class="w-full sm:w-auto flex items-center justify-center bg-primary rounded-2xl py-3 px-6 sm:py-4 sm:px-10 cursor-pointer hover:bg-background hover:outline hover:outline-1 hover:outline-dashed hover:outline-secondary hover:text-foreground transition"
-                href="/projects">View Work</a
-            >
-            <a
-                class="w-full sm:w-auto flex items-center justify-center bg-foreground text-background rounded-2xl py-3 px-6 sm:py-4 sm:px-10 cursor-pointer hover:bg-background hover:outline hover:outline-1 hover:outline-dashed hover:outline-secondary hover:text-foreground transition"
-                href="#Contact">Hire me</a
-            >
-        </div>
+  <h1 class="heading text-[clamp(6rem,20vw,12.5rem)] uppercase">
+    {SITE.TITLE}
+  </h1>
+  <div class="space-y-8">
+    <p class="text-secondary text-2xl">{HOME.HERO_SUBTITLE}</p>
+    <div class="flex flex-col gap-2.5 md:flex-row">
+      <a
+        class="bg-primary hover:bg-background hover:outline-secondary hover:text-foreground flex w-full cursor-pointer items-center justify-center rounded-2xl px-6 py-3 transition hover:outline hover:outline-1 hover:outline-dashed sm:w-auto sm:px-10 sm:py-4"
+        href={HOME.HERO_PRIMARY_CTA.HREF}>{HOME.HERO_PRIMARY_CTA.LABEL}</a
+      >
+      <a
+        class="bg-foreground text-background hover:bg-background hover:outline-secondary hover:text-foreground flex w-full cursor-pointer items-center justify-center rounded-2xl px-6 py-3 transition hover:outline hover:outline-1 hover:outline-dashed sm:w-auto sm:px-10 sm:py-4"
+        href={HOME.HERO_SECONDARY_CTA.HREF}>{HOME.HERO_SECONDARY_CTA.LABEL}</a
+      >
     </div>
+  </div>
 </section>
