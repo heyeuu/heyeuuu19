@@ -128,7 +128,7 @@ async function askQuestions(
       ],
     },
     {
-      type: initialValues.title ? null : "text",
+      type: initialValues.title?.trim() ? null : "text",
       name: "title",
       message: "请输入标题",
       validate: (value) => (value.trim() ? true : "标题不能为空"),
