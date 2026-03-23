@@ -1,160 +1,139 @@
-# 博客与站点自定义说明
+# 博客与站点自定义说明（按当前仓库实现）
 
-这个项目是一个基于 Astro 的静态个人站点，没有后台管理界面。站点信息、页面文案、博客文章和项目内容都直接维护在仓库里。
+这个项目是一个基于 Astro 的静态个人站点，没有后台 CMS。站点配置、页面文案、博客文章和项目内容都直接维护在仓库里。
 
-当前仓库的内容主要分布在这些位置：
+本文档已根据当前代码与目录结构更新。
 
-- `src/consts.ts`：站点标题、页面 SEO 文案、社交链接、邮箱、默认 OG 图
-- `src/components/`：首页区块、导航、页脚、联系区块等可复用组件
-- `src/pages/`：各页面入口，以及博客和项目详情页、标签页、系列页
-- `src/content.config.ts`：博客和项目 collection 的 frontmatter schema
-- `src/content/blog/`：博客文章
-- `src/content/projects/`：项目内容
-- `scripts/content/`：内容脚手架和检查工具
-- `public/`：公开静态资源，如封面图、头像、favicon
+## 0. 当前状态（2026-03-24）
 
-如果当前工作区里还没有 `src/content/` 目录，也属于正常情况。首次手动写内容时创建对应目录即可；用 CLI 新建内容时，脚本也会自动创建父目录。
+- 已存在内容目录：`src/content/blog/`
+- 当前仅有 1 篇草稿：`src/content/blog/astro-monolume-guide.md`（`draft: true`，含 TODO 占位）
+- `src/content/projects/` 目前尚未创建（使用 CLI 新建项目时会自动创建）
 
-## 1. 本地预览
+## 1. 目录总览
+
+当前最关键的维护位置：
+
+- `src/consts.ts`：站点信息、首页/博客/项目元信息、关于页内容、社交链接
+- `src/components/`：导航、首页区块、博客元信息组件、页脚等
+- `src/pages/`：各页面入口和动态路由
+- `src/content.config.ts`：`blog` 与 `projects` 的 collection schema
+- `src/content/blog/`：博客 Markdown 内容
+- `src/content/projects/`：项目 Markdown 内容（当前尚未创建）
+- `src/utils/blog.ts`：博客发布过滤、分组、标签/系列 slug 规则
+- `src/utils/projects.ts`：项目排序规则
+- `scripts/content/`：内容 CLI（new/check/patch）
+- `public/`：静态资源（头像、项目图、favicon 等）
+
+## 2. 本地预览
 
 ```bash
 bun install
 bun run dev
 ```
 
-默认开发地址是 `http://localhost:4321`。
+默认地址：`http://localhost:4321`
 
-这个仓库默认使用 Bun 作为包管理器和脚本运行器。
+常用命令：
 
-## 2. 修改站点基础信息
+```bash
+bun run build
+bun run preview
+bunx astro check
+bun run content:new
+bun run content:check
+bun run content:patch -- --type blog --set draft=false
+```
 
-站点级配置在 `src/consts.ts`。
+## 3. 修改站点基础信息（`src/consts.ts`）
+
+当前站点常量如下（节选）：
 
 ```ts
 export const SITE = {
-  URL: "https://your_site.com",
-  TITLE: "Mono Lume",
+  URL: "https://me.heyeuuu19.com",
+  TITLE: "Liu Heyi",
   DESCRIPTION: "...",
-  OG_IMAGE: "/portrait.webp",
-  OG_IMAGE_ALT: "Portrait of Mono Lume",
-  EMAIL: "hi@monolume.com",
+  OG_IMAGE: "/liuheyi.jpg",
+  OG_IMAGE_ALT: "Portrait of Liu Heyi",
+  EMAIL: "heyeuuu19@gmail.com",
 };
 ```
 
 字段作用：
 
-- `URL`：正式站点域名。`astro.config.mjs` 会用它生成 sitemap 和 canonical URL。
-- `TITLE`：站点主标题，会出现在首页、页脚和浏览器标题等位置。
-- `DESCRIPTION`：默认站点简介。
-- `OG_IMAGE`：默认分享图。
-- `OG_IMAGE_ALT`：默认分享图的替代文本。
-- `EMAIL`：页脚邮箱和其他联系场景使用的邮箱地址。
+- `SITE.URL`：用于 `astro.config.mjs` 的 `site`，影响 sitemap/canonical/OG 绝对地址
+- `SITE.TITLE`：全站标题（Header、Footer、页面标题后缀）
+- `SITE.DESCRIPTION`：默认描述（about/contact/404 等页面在用）
+- `SITE.OG_IMAGE` / `SITE.OG_IMAGE_ALT`：默认分享图
+- `SITE.EMAIL`：页脚 `mailto:` 使用
 
-社交链接同样在 `src/consts.ts`：
+当前社交链接：
 
 ```ts
 export const SOCIALS = [
-  { NAME: "X", HREF: "https://x.com/your_username" },
-  { NAME: "Linkedin", HREF: "https://linkedin.com/" },
-  { NAME: "Github", HREF: "https://github.com/your_username" },
+  { NAME: "Email", HREF: "mailto:heyeuuu19@gmail.com" },
+  { NAME: "Github", HREF: "https://github.com/heyeuu" },
 ];
 ```
 
-你可以直接新增、删除或修改平台名称和链接。
+可以直接增删改。
 
-## 3. 修改页面标题和 SEO 描述
+## 4. 页面文案与区块来源
 
-以下页面级文案也在 `src/consts.ts`：
-
-- `HOME`
-- `BLOG`
-- `PROJECTS`
-
-这些值会传给布局组件，用于浏览器标题、描述信息，以及分享卡片默认内容。
-
-## 4. 修改导航、首页、关于页、联系页和页脚
-
-### 导航栏
+### 4.1 导航栏
 
 文件：`src/components/Header.astro`
 
-可改内容：
+当前导航项是组件内的本地数组（`Home/About/Work/Blog/Contact`），不是从 `consts.ts` 读取。
 
-- 顶部导航名称
-- 导航跳转地址
-- 是否保留 `Home / About / Work / Blog / Contact`
-
-### 首页首屏
+### 4.2 首页首屏 Hero
 
 文件：`src/components/Hero.astro`
 
-可改内容：
+Hero 文案来自：
 
-- 大标题，当前来自 `SITE.TITLE`
-- 副标题文案，当前写死在组件里
-- 两个按钮的文案和跳转目标
+- 主标题：`SITE.TITLE`
+- 副标题：`HOME.HERO_SUBTITLE`
+- 两个按钮：`HOME.HERO_PRIMARY_CTA` / `HOME.HERO_SECONDARY_CTA`
 
-注意：这里的副标题不是自动读取 `SITE.DESCRIPTION`。
+所以这里不是“写死副标题”，而是可在 `src/consts.ts` 统一修改。
 
-### 关于区块
+### 4.3 About 区块
 
 文件：`src/components/About.astro`
 
-可改内容：
+内容来源全部是 `ABOUT` 常量：标题、图片、段落、技能标题、技能列表。
 
-- 标题
-- 个人介绍
-- 技能列表
-- 头像路径
-
-当前头像文件在 `public/portrait.webp`。
-
-### 联系区块
+### 4.4 Contact 区块
 
 文件：`src/components/Contact.astro`
 
-可改内容：
+- 标题与说明文案目前写在组件内
+- 社交链接来自 `SOCIALS`
+- 表单仅为前端 UI，没有 `action`/后端提交逻辑
 
-- 标题
-- 引导文案
-- 社交链接展示
-- 表单字段标题与按钮文案
-
-注意：当前联系表单只有前端界面，没有 `action`、后端接口或第三方表单服务配置，提交不会真正发送消息。
-
-### 页脚
+### 4.5 Footer
 
 文件：`src/components/Footer.astro`
 
-可改内容：
+- 站点名、邮箱来自 `SITE`
+- 社交列表来自 `SOCIALS`
+- Projects 列会读取 `getCollection("projects")`，按排序规则取前 3 个
 
-- 页脚标语
-- 联系方式
-- 导航链接
-- 社交链接列表
-- 版权文案
+## 5. 博客内容维护
 
-当前页脚邮箱链接已经使用 `SITE.EMAIL` 生成 `mailto:`，不再是写死地址。
-
-## 5. 博客内容怎么改
-
-博客内容目录是 `src/content/blog/`。
-
-如果目录不存在，可以手动创建，也可以直接用内容 CLI 生成第一篇文章。
-
-### 博客 frontmatter 格式
-
-博客 schema 定义在 `src/content.config.ts`，当前字段如下：
+### 5.1 博客 schema（`src/content.config.ts`）
 
 ```yaml
 ---
 title: "文章标题"
 description: "文章摘要"
-date: "2026-03-22"
+date: "2026-03-24"
 draft: false
 tags:
   - Astro
-  - Content
+  - Notes
 series: "Astro Notes"
 image:
   url: "/my-post-cover.webp"
@@ -164,66 +143,64 @@ image:
 
 字段说明：
 
-- `title`：必填，文章标题
-- `description`：必填，文章摘要
-- `date`：必填，建议使用 `YYYY-MM-DD`
-- `draft`：可选，`true` 时不会出现在公开列表，也不会生成文章详情页
+- `title`：必填，字符串
+- `description`：必填，字符串
+- `date`：必填，日期（`z.coerce.date()`）
+- `draft`：可选，布尔值
 - `tags`：可选，字符串数组
-- `series`：可选，字符串，用于系列归档
-- `image`：可选，文章头图对象，包含 `url` 和 `alt`
+- `series`：可选，字符串
+- `image`：可选对象，含 `url`/`alt`
 
-### 博客路由规则
+### 5.2 发布规则
 
-- `src/content/blog/my-first-post.md` 对应 `/blog/my-first-post`
-- 如果你把文章放在子目录，例如 `src/content/blog/notes/astro.md`，路由会变成 `/blog/notes/astro`
+博客发布统一用 `getPublishedBlogPosts()` 过滤：`draft: true` 会被隐藏。
 
-### 当前博客页面结构
+隐藏范围：
 
-博客部分现在不只是一个列表页，还包含这些路由：
+- 首页 `Posts` 区块
+- `/blog`
+- `/blog/[...id]` 的静态路径生成
+- `/blog/tags*` 与 `/blog/series*`（因为都基于已发布文章）
 
-- `/blog`：博客总览页，展示统计、热门标签、系列入口和按年份归档
-- `/blog/[...id]`：文章详情页
-- `/blog/tags`：标签总览页
-- `/blog/tags/[tag]`：单个标签页
-- `/blog/series`：系列总览页
-- `/blog/series/[series]`：单个系列页
+### 5.3 博客路由与页面
 
-### `tags` 和 `series` 的作用
+- `/blog`：总览（统计卡片 + 热门标签 + 系列 + 年份归档）
+- `/blog/[...id]`：文章详情
+- `/blog/tags`：标签总览
+- `/blog/tags/[tag]`：单标签页面
+- `/blog/series`：系列总览
+- `/blog/series/[series]`：单系列页面
 
-- `tags` 用于按主题聚合文章
-- `series` 用于把多篇文章串成阅读路径
-- 标签和系列页的 slug 会根据名称自动生成
-- 文章详情页会显示标签和系列入口
-- 如果一篇文章属于某个系列，详情页还会显示该系列的其他文章
-- 详情页还会根据共同标签推荐相关文章
+### 5.4 标签与系列的行为
 
-### 发布与隐藏规则
+核心逻辑在 `src/utils/blog.ts`：
 
-- 首页 `Posts` 区块只展示已发布文章中的最新 3 篇
-- `/blog` 列表页只展示已发布文章
-- `draft: true` 的文章不会出现在公开页面，也不会生成详情路由
+- 标签聚合：`getTagGroups(posts)`
+- 系列聚合：`getSeriesGroups(posts)`
+- 标签路径：`getTagPath(tag)` -> `/blog/tags/<slug>`
+- 系列路径：`getSeriesPath(series)` -> `/blog/series/<slug>`
 
-### 建议
+`slug` 由 `toTaxonomySlug()` 生成，支持 Unicode 字母数字（包括中文），空格/下划线会归一化为 `-`。
 
-- 博客正文优先使用 `.md`
-- 虽然 loader 和 CLI 参数里都允许 `.mdx`，但当前项目没有配置 MDX integration。除非你先给 Astro 加上 MDX 支持，否则不要新增 `.mdx`
+### 5.5 详情页附加内容
 
-## 6. 项目内容怎么改
+`src/pages/blog/[...id].astro` 里还包含：
 
-项目内容目录是 `src/content/projects/`。
+- 标签和系列 pills
+- 可选头图（仅在 `image` 存在时显示）
+- 系列内文章列表（同系列且数量 > 1）
+- 根据共同标签推荐的相关文章（最多 3 篇）
 
-每个 Markdown 文件对应一个项目详情页。
+## 6. 项目内容维护
 
-### 项目 frontmatter 格式
-
-项目 schema 定义在 `src/content.config.ts`，当前字段如下：
+### 6.1 项目 schema（`src/content.config.ts`）
 
 ```yaml
 ---
 title: "项目名"
 description: "项目简介"
 order: 1
-date: "2026-03-22"
+date: "2026-03-24"
 liveUrl: "https://example.com"
 githubUrl: "https://github.com/yourname/project"
 image:
@@ -236,35 +213,37 @@ image:
 
 - `title`：必填
 - `description`：必填
-- `order`：可选，整数。数值越小越靠前
-- `date`：可选，通常用于没有 `order` 时辅助排序
-- `liveUrl`：可选，线上地址
-- `githubUrl`：可选，源码地址
-- `image`：必填，包含 `url` 和 `alt`
+- `image`：必填，`url` 和 `alt`
+- `order`：可选，整数
+- `date`：可选，日期
+- `liveUrl`：可选，需合法 URL
+- `githubUrl`：可选，需合法 URL
 
-### 项目排序规则
+### 6.2 排序规则
 
-项目排序逻辑在 `src/utils/projects.ts`，当前规则是：
+`src/utils/projects.ts`：
 
 1. `order` 升序
 2. `date` 降序
 3. `id` 升序
 
-如果你希望项目顺序稳定可控，建议显式填写 `order`，必要时再补 `date`。
+### 6.3 展示位置
 
-### 项目展示位置
+- 首页 `Projects` 区块：排序后前 3 个
+- 页脚 `Projects`：排序后前 3 个
+- `/projects`：全部项目（同排序）
+- `/projects/[...id]`：项目详情
 
-- 首页 `Work` 区块展示排序后的前 3 个项目
-- `/projects` 展示全部项目
-- `/projects/[...id]` 是项目详情页
+### 6.4 详情页按钮逻辑
 
-项目详情页会根据是否填写 `githubUrl` 和 `liveUrl` 决定是否显示 `Source` / `Live Demo` 按钮。
+`src/pages/projects/[...id].astro` 已做条件渲染：
 
-## 7. 用内容 CLI 管理博客和项目
+- 有 `githubUrl` 才显示 `Source`
+- 有 `liveUrl` 才显示 `Live Demo`
 
-这个仓库已经内置一套内容 CLI，入口在 `scripts/content/index.ts`。
+## 7. 内容 CLI（`scripts/content`）
 
-### 常用命令
+### 7.1 命令
 
 ```bash
 bun run content:new
@@ -272,7 +251,7 @@ bun run content:check
 bun run content:patch -- --type blog --set draft=false
 ```
 
-也可以直接用 Bun 运行脚本入口：
+等价入口：
 
 ```bash
 bun ./scripts/content/index.ts new
@@ -280,182 +259,123 @@ bun ./scripts/content/index.ts check
 bun ./scripts/content/index.ts patch --type blog --set draft=false
 ```
 
-### 新建内容
+### 7.2 `new`（新建内容）
 
-交互式：
-
-```bash
-bun run content:new
-```
-
-半自动：
+示例：
 
 ```bash
 bun run content:new -- --type blog --title "Astro Content Workflow"
 bun run content:new -- --type projects --title "Form Builder" --slug form-builder
 ```
 
-支持的常用参数：
+支持参数：
 
-- `--type blog`
-- `--type projects`
-- `--type project`
-- `--title "..."`
-- `--slug "..."`
-- `--dry-run`
+- `--type blog|projects`（`project` 会自动归一化为 `projects`）
+- `--title`
+- `--slug`
+- `--format md|mdx`
 - `--no-prompt`
-- `--format md`
-- `--format mdx`
+- `--dry-run`
 
-注意：
+模板行为：
 
-- `project` 会自动规范成 `projects`
-- 不传 `slug` 时会根据标题自动生成
-- 如果标题无法稳定生成 slug，例如纯中文标题，建议手动传 `--slug`
-- 当前项目没有 MDX integration，所以实际仍建议使用 `--format md`
+- Blog 模板默认 `draft: true`
+- 模板里会带 TODO 占位（`description`、正文段落、项目图 `alt` 等）
+- 如果目录不存在，脚本会自动 `mkdir -p`
 
-### 新建后的默认模板行为
-
-- blog 模板默认写入 `draft: true`
-- blog 的 `description`、project 的 `description` 和 `image.alt` 可能先是 `TODO` 占位
-- project 模板会默认生成 `/${slug}.webp` 作为封面路径，需要你自己把图片放进 `public/` 或手动改路径
-
-### 内容检查
+### 7.3 `check`（检查内容）
 
 ```bash
 bun run content:check
-```
-
-这个命令会检查：
-
-- frontmatter 是否存在
-- 必填字段是否缺失
-- 字段类型是否不合法
-- 文件名 slug 是否符合小写连字符风格
-- 一些 `TODO` 占位字段是否还没替换
-
-也可以只检查某个 collection：
-
-```bash
 bun run content:check -- --type blog
 bun run content:check -- --type projects
 ```
 
-### 批量修改 frontmatter
+会检查：
+
+- frontmatter 是否存在
+- 必填字段/类型是否合法
+- 文件名 slug 是否是小写连字符风格
+- TODO 占位是否未替换（warning）
+
+### 7.4 `patch`（批量改 frontmatter）
 
 ```bash
 bun run content:patch -- --type blog --set draft=true
 bun run content:patch -- --type blog --set series="Astro Notes"
-bun run content:patch -- --type projects --set githubUrl=null
 bun run content:patch -- --type projects --set image.url="/default-cover.webp"
+bun run content:patch -- --type projects --set githubUrl=null
 ```
 
 说明：
 
-- `patch` 当前按整个 collection 生效，不支持复杂筛选
-- `--set key=value` 可以重复传多次
+- 作用范围是整个 collection，不支持筛选表达式
+- `--set` 可重复
 - `null` 表示删除字段
-- 支持点路径，例如 `image.url`
+- 支持点路径（如 `image.url`）
+- patch 后会做 schema 验证，错误会中止
 
-## 8. 图片、图标和静态资源
+## 8. 图片、样式与字体
 
-公开可访问的静态资源放在 `public/`。
+### 8.1 图片
 
-当前常见资源有：
+`public/` 当前常见资源：
 
 - `public/favicon.svg`
+- `public/liuheyi.jpg`
 - `public/portrait.webp`
 - `public/formsync.webp`
 - `public/promptsmith.webp`
 - `public/zentrack.webp`
 
-如果图片放在 `public/` 下，引用时直接写根路径，例如：
+frontmatter 的 `image.url` 当前是普通字符串路径（常用 `/xxx.webp`），不是 `ImageMetadata`。
 
-```txt
-/portrait.webp
-/my-post-cover.webp
-```
+### 8.2 全局样式
 
-博客和项目 frontmatter 里的 `image.url` 当前就是普通字符串，不是 Astro 的 `ImageMetadata`。
+文件：`src/styles/global.css`
 
-## 9. 样式、颜色和字体
+- Tailwind v4 CSS-first：`@import "tailwindcss"`
+- Typography 插件：`@plugin '@tailwindcss/typography'`
+- 主题变量：
+  - 颜色：`--color-primary` / `--color-background` / `--color-foreground` / `--color-secondary`
+  - 字体：`--font-plex` / `--font-geist`
 
-全局样式在 `src/styles/global.css`。
+### 8.3 字体
 
-这里目前管理：
+`astro.config.mjs` 配置了 Google Fonts：
 
-- Tailwind v4 入口
-- Typography 插件
-- 颜色变量
-- 字体变量
-- 全局排版样式
+- IBM Plex Mono
+- Geist
 
-当前主要主题变量：
+并在 `src/components/Head.astro` 里通过 `<Font cssVariable="..." preload />` 预加载。
 
-```css
---color-primary
---color-background
---color-foreground
---color-secondary
---font-plex
---font-geist
-```
-
-字体加载配置在 `astro.config.mjs`，当前使用 Google Fonts：
-
-- `IBM Plex Mono`
-- `Geist`
-
-如果你要换字体，通常至少要同时修改：
-
-- `astro.config.mjs`
-- `src/styles/global.css`
-
-## 10. 其他常改页面
-
-这些页面入口也经常需要单独调整：
-
-- `src/pages/index.astro`
-- `src/pages/about.astro`
-- `src/pages/contact.astro`
-- `src/pages/blog/index.astro`
-- `src/pages/blog/tags/index.astro`
-- `src/pages/blog/series/index.astro`
-- `src/pages/projects/index.astro`
-- `src/pages/404.astro`
-
-一般来说：
-
-- `src/pages/*.astro` 决定页面结构和区块组合
-- `src/components/*.astro` 决定每个区块的具体文案和样式
-- `src/content/` 决定博客和项目正文内容
-
-## 11. 修改完成后建议检查
+## 9. 修改后建议检查
 
 至少执行：
 
 ```bash
+bunx astro check
 bun run build
 ```
 
-如果你额外安装了 `@astrojs/check` 和 `typescript`，还可以执行：
+内容改动前建议再跑：
 
 ```bash
-bunx astro check
+bun run content:check
 ```
 
-提交前建议确认：
+人工检查清单：
 
-1. `SITE.URL` 是否已经换成正式域名
-2. 邮箱、社交链接、OG 图是否已经替换模板默认值
-3. 博客和项目封面图路径是否存在
-4. `draft: true` 的文章是否符合预期
-5. `tags` 和 `series` 的命名是否统一，避免出现同义不同写法
-6. 项目排序字段 `order` / `date` 是否已经设置
+1. `SITE.URL` 是否为正式域名
+2. `SOCIALS`、邮箱、OG 图是否正确
+3. frontmatter 的图片路径是否真实存在
+4. 需要发布的文章是否仍是 `draft: true`
+5. `tags` / `series` 命名是否统一（避免同义不同写）
+6. 项目排序字段 `order` / `date` 是否符合预期
 
-## 12. 最常需要改的文件
+## 10. 最快上手的文件
 
-如果你想最快开始，优先看这些文件：
+如果只想快速改出效果，优先看：
 
 - `src/consts.ts`
 - `src/components/Hero.astro`
@@ -463,7 +383,9 @@ bunx astro check
 - `src/components/Contact.astro`
 - `src/components/Footer.astro`
 - `src/pages/blog/index.astro`
+- `src/pages/blog/tags/index.astro`
+- `src/pages/blog/series/index.astro`
+- `src/pages/projects/index.astro`
 - `src/content/blog/`
 - `src/content/projects/`
-- `public/portrait.webp`
-- `public/favicon.svg`
+- `public/`
