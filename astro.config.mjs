@@ -1,5 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, fontProviders } from "astro/config";
+import mdx from "@astrojs/mdx";
 
 import { SITE } from "./src/consts";
 import sitemap from "@astrojs/sitemap";
@@ -23,5 +24,5 @@ export default defineConfig({
       provider: fontProviders.google(),
     },
   ],
-  integrations: [sitemap()],
+  integrations: [mdx(), sitemap()],
 });
