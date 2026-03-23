@@ -62,7 +62,7 @@ export const PROJECTS = {
 export const SOCIALS = [
   {
     NAME: "Email",
-    HREF: "https://heyeuuu19@gmail.com",
+    HREF: "mailto:heyeuuu19@gmail.com",
   },
   {
     NAME: "Github",
