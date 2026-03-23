@@ -2,31 +2,6 @@
 
 这个项目是一个基于 Astro 的静态个人站点，没有后台 CMS。站点配置、页面文案、博客文章和项目内容都直接维护在仓库里。
 
-<<<<<<< HEAD
-## 1. 目录总览
-
-当前最关键的维护位置：
-
-- `src/consts.ts`：站点信息、首页/博客/项目元信息、关于页内容、社交链接
-- `src/components/`：导航、首页区块、博客元信息组件、页脚等
-- `src/pages/`：各页面入口和动态路由
-- `src/content.config.ts`：`blog` 与 `projects` 的 collection schema
-- `src/content/blog/`：博客 Markdown 内容
-- `src/content/projects/`：项目 Markdown 内容（当前尚未创建）
-- `src/utils/blog.ts`：博客发布过滤、分组、标签/系列 slug 规则
-- `src/utils/projects.ts`：项目排序规则
-- `scripts/content/`：内容 CLI（new/check/patch）
-- `public/`：静态资源（头像、项目图、favicon 等）
-
-=======
-本文档已根据当前代码与目录结构更新。
-
-## 0. 当前状态（2026-03-24）
-
-- 已存在内容目录：`src/content/blog/`
-- 当前仅有 1 篇草稿：`src/content/blog/astro-monolume-guide.md`（`draft: true`，含 TODO 占位）
-- `src/content/projects/` 目前尚未创建（使用 CLI 新建项目时会自动创建）
-
 ## 1. 目录总览
 
 当前最关键的维护位置：
