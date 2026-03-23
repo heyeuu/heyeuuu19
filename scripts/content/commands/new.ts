@@ -164,7 +164,7 @@ async function askQuestions(
 
   return {
     collectionKey: initialValues.collectionKey ?? response.collectionKey,
-    title: initialValues.title ?? response.title,
+    title: initialValues.title?.trim() ? initialValues.title : response.title,
     slug: response.slug ?? initialValues.slug,
     format: initialValues.format ?? response.format,
   };
