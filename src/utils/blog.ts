@@ -10,6 +10,9 @@ export type TaxonomyGroup = {
   posts: BlogEntry[];
 };
 
+const TAXONOMY_SLUG_CHAR = /^[\p{Letter}\p{Number}]$/u;
+const TAXONOMY_SLUG_SEPARATOR = /^[\s_-]$/u;
+
 export function getPublishedBlogPosts(posts: BlogEntry[]) {
   return sortBlogPosts(posts.filter((post) => !post.data.draft));
 }
@@ -61,9 +64,41 @@ export function getSeriesPath(series: string) {
 }
 
 export function toTaxonomySlug(value: string) {
-  const normalized = normalizeTaxonomyValue(value)
-    .toLowerCase()
-    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
+  const normalizedValue = normalizeTaxonomyValue(value).toLowerCase();
+  const parts: string[] = [];
+  let needsSeparator = false;
+
+  for (const char of normalizedValue) {
+    if (TAXONOMY_SLUG_CHAR.test(char)) {
+      if (needsSeparator && parts.length > 0) {
+        parts.push("-");
+      }
+
+      parts.push(char);
+      needsSeparator = false;
+      continue;
+    }
+
+    if (TAXONOMY_SLUG_SEPARATOR.test(char)) {
+      needsSeparator = parts.length > 0;
+      continue;
+    }
+
+    if (needsSeparator && parts.length > 0) {
+      parts.push("-");
+      needsSeparator = false;
+    }
+
+    if (parts.length > 0 && parts[parts.length - 1] !== "-") {
+      parts.push("-");
+    }
+
+    parts.push(`u${char.codePointAt(0)?.toString(16).padStart(4, "0")}`);
+  }
+
+  const normalized = parts
+    .join("")
+    .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
 
   return normalized || "untitled";
@@ -83,12 +118,10 @@ export function sortTaxonomyGroupsByUsage(groups: TaxonomyGroup[]) {
  * Callers should guard against this if an empty result is desired for missing series.
  */
 export function getSeriesPosts(posts: BlogEntry[], series: string) {
-  const normalizedSeries = normalizeTaxonomyValue(series);
+  const seriesKey = getTaxonomyKey(series);
 
   return sortBlogPosts(
-    posts.filter(
-      (post) => normalizeTaxonomyValue(post.data.series) === normalizedSeries,
-    ),
+    posts.filter((post) => getTaxonomyKey(post.data.series) === seriesKey),
     "asc",
   );
 }
@@ -110,7 +143,7 @@ function collectTaxonomyGroups(
         continue;
       }
 
-      const slug = toTaxonomySlug(name);
+      const slug = getTaxonomyKey(name);
 
       if (seenSlugs.has(slug)) {
         continue;
@@ -157,4 +190,14 @@ function collectTaxonomyGroups(
 
 function normalizeTaxonomyValue(value?: string) {
   return value?.trim() ?? "";
+}
+
+function getTaxonomyKey(value?: string) {
+  const normalizedValue = normalizeTaxonomyValue(value);
+
+  if (!normalizedValue) {
+    return "";
+  }
+
+  return toTaxonomySlug(normalizedValue);
 }

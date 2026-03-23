@@ -18,6 +18,8 @@ import {
   setValueAtPath,
 } from "../core/utils.mjs";
 
+const MISSING_VALUE = Symbol("missing-value");
+
 export async function runPatch(argv) {
   const { flags } = parseArgs(argv);
   const collectionKey = normalizeCollectionKey(getFlag(flags, "type"));
@@ -36,15 +38,15 @@ export async function runPatch(argv) {
   const files = await listContentFiles(collection.directory);
   const operations = assignments.map(parseAssignment);
   const changedFiles = [];
+  const pendingWrites = [];
 
   for (const filePath of files) {
     const source = await fs.readFile(filePath, "utf8");
     const parsed = parseMarkdownFile(source);
+    const relativePath = relativeContentPath(collection, filePath);
 
     if (!parsed.hasFrontmatter) {
-      throw new Error(
-        `Missing frontmatter in ${relativeContentPath(collection, filePath)}`,
-      );
+      throw new Error(`Missing frontmatter in ${relativePath}`);
     }
 
     const nextData = structuredClone(parsed.data);
@@ -58,15 +60,39 @@ export async function runPatch(argv) {
     }
 
     const normalized = normalizeFrontmatter(collection, nextData);
+
+    for (const operation of operations) {
+      if (operation.remove) {
+        continue;
+      }
+
+      const normalizedValue = getValueAtPath(normalized, operation.path);
+
+      if (normalizedValue === MISSING_VALUE) {
+        throw new Error(
+          `Failed to apply \`--set ${operation.path}\` in ${relativePath}: path is missing after normalization.`,
+        );
+      }
+
+      if (!isDeepEqual(normalizedValue, operation.value)) {
+        throw new Error(
+          `Failed to apply \`--set ${operation.path}\` in ${relativePath}: expected ${formatValue(operation.value)}, got ${formatValue(normalizedValue)}.`,
+        );
+      }
+    }
+
     const nextSource = stringifyMarkdownFile(normalized, parsed.body);
 
     if (nextSource === source) {
       continue;
     }
 
-    changedFiles.push(relativeContentPath(collection, filePath));
+    changedFiles.push(relativePath);
+    pendingWrites.push({ filePath, nextSource });
+  }
 
-    if (!dryRun) {
+  if (!dryRun) {
+    for (const { filePath, nextSource } of pendingWrites) {
       await fs.writeFile(filePath, nextSource, "utf8");
     }
   }
@@ -108,4 +134,69 @@ function parseAssignment(input) {
     remove: false,
     value: YAML.parse(rawValue),
   };
+}
+
+function getValueAtPath(target, dottedPath) {
+  const keys = dottedPath.split(".");
+  let current = target;
+
+  for (const key of keys) {
+    if (!current || typeof current !== "object" || !(key in current)) {
+      return MISSING_VALUE;
+    }
+
+    current = current[key];
+  }
+
+  return current;
+}
+
+function isDeepEqual(left, right) {
+  if (Object.is(left, right)) {
+    return true;
+  }
+
+  if (left instanceof Date && right instanceof Date) {
+    return left.valueOf() === right.valueOf();
+  }
+
+  if (
+    !left ||
+    !right ||
+    typeof left !== "object" ||
+    typeof right !== "object"
+  ) {
+    return false;
+  }
+
+  if (Array.isArray(left) || Array.isArray(right)) {
+    if (!Array.isArray(left) || !Array.isArray(right)) {
+      return false;
+    }
+
+    if (left.length !== right.length) {
+      return false;
+    }
+
+    return left.every((item, index) => isDeepEqual(item, right[index]));
+  }
+
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+
+  if (leftKeys.length !== rightKeys.length) {
+    return false;
+  }
+
+  return leftKeys.every(
+    (key) => key in right && isDeepEqual(left[key], right[key]),
+  );
+}
+
+function formatValue(value) {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  return JSON.stringify(value);
 }

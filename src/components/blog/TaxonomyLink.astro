@@ -1,12 +1,12 @@
 ---
-type Props = {
+interface Props {
   href: string;
   label: string;
   kind: "tag" | "series";
   count?: number;
   compact?: boolean;
   current?: boolean;
-};
+}
 
 const {
   href,
@@ -15,7 +15,7 @@ const {
   count,
   compact = false,
   current = false,
-} = Astro.props;
+}: Props = Astro.props;
 ---
 
 <a

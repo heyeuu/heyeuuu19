@@ -6,9 +6,7 @@ type Props = {
   entry: CollectionEntry<"blog"> | CollectionEntry<"projects">;
 };
 
-const { entry } = Astro.props as {
-  entry: CollectionEntry<"blog"> | CollectionEntry<"projects">;
-};
+const { entry } = Astro.props as Props;
 
 const blogEntry =
   entry.collection === "blog" ? (entry as CollectionEntry<"blog">) : undefined;

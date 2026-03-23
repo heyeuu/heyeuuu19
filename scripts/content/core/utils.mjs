@@ -124,11 +124,22 @@ export function setValueAtPath(target, dottedPath, value) {
   }
 
   let current = target;
-  for (const key of keys) {
+  for (const [index, key] of keys.entries()) {
     const next = current[key];
-    if (!next || typeof next !== "object" || Array.isArray(next)) {
+
+    if (next === undefined) {
       current[key] = {};
+      current = current[key];
+      continue;
     }
+
+    if (!next || typeof next !== "object" || Array.isArray(next)) {
+      const traversedPath = keys.slice(0, index + 1).join(".");
+      throw new Error(
+        `Cannot set field path "${dottedPath}": "${traversedPath}" already contains ${formatPathValue(next)}.`,
+      );
+    }
+
     current = current[key];
   }
 
@@ -174,4 +185,13 @@ function appendFlag(flags, key, value) {
   }
 
   flags[key] = [flags[key], value];
+}
+
+function formatPathValue(value) {
+  const formatted = JSON.stringify(value);
+  if (formatted !== undefined) {
+    return formatted;
+  }
+
+  return String(value);
 }

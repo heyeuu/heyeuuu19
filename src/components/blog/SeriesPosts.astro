@@ -2,19 +2,20 @@
 import FormattedDate from "@/components/FormattedDate.astro";
 import type { BlogEntry } from "@/utils/blog";
 
-type Props = {
+interface Props {
   posts: BlogEntry[];
   currentId?: string;
   title?: string;
   description?: string;
-};
+}
 
+const props: Props = Astro.props;
 const {
   posts,
   currentId,
   title = "In This Series",
   description = "Read the connected posts in order.",
-} = Astro.props as Props;
+} = props;
 ---
 
 {
