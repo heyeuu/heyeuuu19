@@ -3,8 +3,8 @@ import { SITE, SOCIALS } from "@/consts";
 import { getCollection, type CollectionEntry } from "astro:content";
 import { sortProjects } from "@/utils/projects";
 
-const projects: CollectionEntry<"projects">[] = (
-  await getCollection("projects")
+const projects: CollectionEntry<"projects">[] = sortProjects(
+  await getCollection("projects"),
 ).slice(0, 3);
 ---
 
@@ -50,7 +50,7 @@ const projects: CollectionEntry<"projects">[] = (
       <h3 class="mb-2 text-xl">Projects</h3>
       {
         projects.length > 0 ? (
-          <ul class="space-y-1 text-secondary">
+          <ul class="text-secondary space-y-1">
             {projects.map((project) => (
               <li>
                 <a href={`/projects/${project.id}`}>{project.data.title}</a>

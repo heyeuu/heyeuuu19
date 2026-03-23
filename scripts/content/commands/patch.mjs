@@ -9,6 +9,7 @@ import {
 } from "../core/frontmatter.mjs";
 import {
   deleteValueAtPath,
+  formatIssue,
   getAllFlags,
   getFlag,
   listContentFiles,
@@ -59,13 +60,10 @@ export async function runPatch(argv) {
       }
     }
 
+    const validationOperations = getValidationOperations(operations, nextData);
     const normalized = normalizeFrontmatter(collection, nextData);
 
-    for (const operation of operations) {
-      if (operation.remove) {
-        continue;
-      }
-
+    for (const operation of validationOperations) {
       const normalizedValue = getValueAtPath(normalized, operation.path);
 
       if (normalizedValue === MISSING_VALUE) {
@@ -79,6 +77,18 @@ export async function runPatch(argv) {
           `Failed to apply \`--set ${operation.path}\` in ${relativePath}: expected ${formatValue(operation.value)}, got ${formatValue(normalizedValue)}.`,
         );
       }
+    }
+
+    const validationIssues = collection
+      .validate(normalized, relativePath)
+      .filter((issue) => issue.level === "error");
+
+    if (validationIssues.length > 0) {
+      throw new Error(
+        `Validation failed for ${relativePath}:\n${validationIssues
+          .map((issue) => `- ${formatIssue(issue)}`)
+          .join("\n")}`,
+      );
     }
 
     const nextSource = stringifyMarkdownFile(normalized, parsed.body);
@@ -134,6 +144,34 @@ function parseAssignment(input) {
     remove: false,
     value: YAML.parse(rawValue),
   };
+}
+
+function getValidationOperations(operations, target) {
+  const seenPaths = new Set();
+  const validationOperations = [];
+
+  for (let index = operations.length - 1; index >= 0; index -= 1) {
+    const operation = operations[index];
+
+    if (operation.remove || seenPaths.has(operation.path)) {
+      continue;
+    }
+
+    seenPaths.add(operation.path);
+
+    const value = getValueAtPath(target, operation.path);
+    if (value === MISSING_VALUE) {
+      continue;
+    }
+
+    validationOperations.unshift({
+      path: operation.path,
+      remove: false,
+      value,
+    });
+  }
+
+  return validationOperations;
 }
 
 function getValueAtPath(target, dottedPath) {

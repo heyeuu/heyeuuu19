@@ -2,6 +2,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const RESERVED_PATH_SEGMENTS = new Set([
+  "__proto__",
+  "prototype",
+  "constructor",
+]);
 
 export function parseArgs(argv) {
   const positional = [];
@@ -123,8 +128,12 @@ export function setValueAtPath(target, dottedPath, value) {
     throw new Error(`Invalid field path: ${dottedPath}`);
   }
 
+  assertSafePathSegment(lastKey, dottedPath);
+
   let current = target;
   for (const [index, key] of keys.entries()) {
+    assertSafePathSegment(key, dottedPath);
+
     const next = current[key];
 
     if (next === undefined) {
@@ -154,8 +163,12 @@ export function deleteValueAtPath(target, dottedPath) {
     throw new Error(`Invalid field path: ${dottedPath}`);
   }
 
+  assertSafePathSegment(lastKey, dottedPath);
+
   let current = target;
   for (const key of keys) {
+    assertSafePathSegment(key, dottedPath);
+
     if (
       !current[key] ||
       typeof current[key] !== "object" ||
@@ -194,4 +207,12 @@ function formatPathValue(value) {
   }
 
   return String(value);
+}
+
+function assertSafePathSegment(segment, dottedPath) {
+  if (RESERVED_PATH_SEGMENTS.has(segment)) {
+    throw new Error(
+      `Invalid field path "${dottedPath}": segment "${segment}" is not allowed.`,
+    );
+  }
 }
