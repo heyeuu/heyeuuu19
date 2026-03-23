@@ -18,6 +18,10 @@ export interface FrontmatterObject {
   [key: string]: FrontmatterValue | undefined;
 }
 
+export function isPlainObject(value: unknown): value is FrontmatterObject {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 export interface ContentIssue {
   level: "error" | "warning";
   path: string;

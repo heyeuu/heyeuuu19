@@ -1,6 +1,6 @@
 import YAML from "yaml";
 
-import type { FrontmatterObject } from "./types.ts";
+import { isPlainObject, type FrontmatterObject } from "./types.ts";
 
 export function parseMarkdownFile(source: string): {
   data: FrontmatterObject;
@@ -92,8 +92,4 @@ function repairLooseObjectBlocks(frontmatterSource: string): string {
   }
 
   return repaired.join("\n");
-}
-
-function isPlainObject(value: unknown): value is FrontmatterObject {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }

@@ -1,13 +1,14 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type {
-  CollectionDefinition,
-  ContentIssue,
-  CreateTemplateInput,
-  FrontmatterObject,
-  FrontmatterValue,
-  SupportedCollectionKey,
+import {
+  isPlainObject,
+  type CollectionDefinition,
+  type ContentIssue,
+  type CreateTemplateInput,
+  type FrontmatterObject,
+  type FrontmatterValue,
+  type SupportedCollectionKey,
 } from "./types.ts";
 
 const ROOT_DIR = path.resolve(
@@ -392,8 +393,4 @@ function isTodoPlaceholder(value: unknown): boolean {
     /^todo:/i.test(value.trim()) ||
     /example\.com|yourname|placeholder/i.test(value)
   );
-}
-
-function isPlainObject(value: unknown): value is FrontmatterObject {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }

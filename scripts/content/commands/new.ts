@@ -15,14 +15,9 @@ import {
 } from "../core/utils.ts";
 
 type ContentFormat = "md" | "mdx";
+type PromptName = "collectionKey" | "title" | "slug" | "format";
 
-interface PromptAnswers {
-  [key: string]: unknown;
-  collectionKey?: string;
-  title?: string;
-  slug?: string;
-  format?: ContentFormat;
-}
+type PromptAnswers = Partial<Record<PromptName, string>>;
 
 type NewAnswers = PromptAnswers & {
   format: ContentFormat;
@@ -31,27 +26,32 @@ type NewAnswers = PromptAnswers & {
 export async function runNew(argv: string[]): Promise<void> {
   const { flags } = parseArgs(argv);
   const collectionKey = normalizeCollectionKey(getStringFlag(flags, "type"));
-  const format = normalizeFormat(
-    getStringFlag(flags, "format") ?? (getFlag(flags, "mdx") ? "mdx" : "md"),
-  );
+  const rawFlagFormat =
+    getStringFlag(flags, "format") ??
+    (getFlag(flags, "mdx") ? "mdx" : undefined);
   const titleFromFlag = getStringFlag(flags, "title");
   const slugFromFlag = getStringFlag(flags, "slug");
   const dryRun = Boolean(getFlag(flags, "dry-run"));
   const interactive = !getFlag(flags, "no-prompt");
 
-  const answers: NewAnswers = interactive
+  const rawAnswers: PromptAnswers = interactive
     ? await askQuestions({
         collectionKey,
         title: titleFromFlag,
         slug: slugFromFlag,
-        format,
+        format: rawFlagFormat,
       })
     : {
         collectionKey,
         title: titleFromFlag,
         slug: slugFromFlag,
-        format,
+        format: rawFlagFormat,
       };
+
+  const answers: NewAnswers = {
+    ...rawAnswers,
+    format: normalizeFormat(rawAnswers.format ?? "md"),
+  };
 
   if (!answers.collectionKey) {
     throw new Error("`--type` is required when `--no-prompt` is used.");
@@ -114,8 +114,10 @@ export async function runNew(argv: string[]): Promise<void> {
   );
 }
 
-async function askQuestions(initialValues: NewAnswers): Promise<NewAnswers> {
-  const questions: PromptObject<PromptAnswers>[] = [
+async function askQuestions(
+  initialValues: PromptAnswers,
+): Promise<PromptAnswers> {
+  const questions: PromptObject<PromptName>[] = [
     {
       type: initialValues.collectionKey ? null : "select",
       name: "collectionKey",
@@ -154,7 +156,7 @@ async function askQuestions(initialValues: NewAnswers): Promise<NewAnswers> {
     },
   ];
 
-  const response = await prompts<PromptAnswers>(questions, {
+  const response = await prompts<PromptName>(questions, {
     onCancel: () => {
       throw new Error("Command cancelled.");
     },
@@ -164,7 +166,7 @@ async function askQuestions(initialValues: NewAnswers): Promise<NewAnswers> {
     collectionKey: initialValues.collectionKey ?? response.collectionKey,
     title: initialValues.title ?? response.title,
     slug: response.slug ?? initialValues.slug,
-    format: initialValues.format ?? response.format ?? "md",
+    format: initialValues.format ?? response.format,
   };
 }
 

@@ -1,11 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type {
-  ContentIssue,
-  FrontmatterObject,
-  FrontmatterValue,
-  ParsedArgs,
+import {
+  isPlainObject,
+  type ContentIssue,
+  type FrontmatterObject,
+  type FrontmatterValue,
+  type ParsedArgs,
 } from "./types.ts";
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -276,8 +277,4 @@ function assertSafePathSegment(segment: string, dottedPath: string): void {
       `Invalid field path "${dottedPath}": segment "${segment}" is not allowed.`,
     );
   }
-}
-
-function isPlainObject(value: unknown): value is FrontmatterObject {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
