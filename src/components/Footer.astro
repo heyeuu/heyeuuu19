@@ -21,7 +21,7 @@ const projects: CollectionEntry<"projects">[] = sortProjects(
     <div>
       <h3 class="mb-2 text-xl">Contact</h3>
       <ul>
-        <li><a href="mailto:someone@example.com">{SITE.EMAIL}</a></li>
+        <li><a href={`mailto:${SITE.EMAIL}`}>{SITE.EMAIL}</a></li>
       </ul>
     </div>
     <div>
@@ -48,15 +48,19 @@ const projects: CollectionEntry<"projects">[] = sortProjects(
     </div>
     <div>
       <h3 class="mb-2 text-xl">Projects</h3>
-      <ul class="text-secondary space-y-1">
-        {
-          projects.map((project) => (
-            <li>
-              <a href={`/projects/${project.id}`}>{project.data.title}</a>
-            </li>
-          ))
-        }
-      </ul>
+      {
+        projects.length > 0 ? (
+          <ul class="text-secondary space-y-1">
+            {projects.map((project) => (
+              <li>
+                <a href={`/projects/${project.id}`}>{project.data.title}</a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="text-secondary">No projects published yet.</p>
+        )
+      }
     </div>
   </div>
   <span class="block text-center text-sm opacity-70">

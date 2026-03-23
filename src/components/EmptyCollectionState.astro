@@ -1,0 +1,32 @@
+---
+type Props = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  href?: string;
+  linkLabel?: string;
+};
+
+const { eyebrow, title, description, href, linkLabel } = Astro.props as Props;
+---
+
+<div
+  class="border-secondary/60 bg-background/85 space-y-4 rounded-[2rem] border border-dashed p-6 md:p-8"
+>
+  <p class="text-secondary text-xs tracking-[0.3em] uppercase">{eyebrow}</p>
+  <div class="space-y-2">
+    <h3 class="heading text-2xl uppercase md:text-4xl">{title}</h3>
+    <p class="text-secondary max-w-2xl">{description}</p>
+  </div>
+
+  {
+    href && linkLabel && (
+      <a
+        href={href}
+        class="text-secondary hover:text-foreground inline-flex text-sm underline decoration-dashed underline-offset-4 transition-colors"
+      >
+        {linkLabel}
+      </a>
+    )
+  }
+</div>

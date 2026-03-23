@@ -5,8 +5,13 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "build:force": "astro build --force",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "content": "node ./scripts/content/index.mjs",
+    "content:new": "node ./scripts/content/index.mjs new",
+    "content:check": "node ./scripts/content/index.mjs check",
+    "content:patch": "node ./scripts/content/index.mjs patch"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.1",
@@ -20,6 +25,7 @@
     "prettier": "^3.8.1",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.6.14",
-    "typescript": "^5.9.3"
+    "prompts": "^2.4.2",
+    "yaml": "^2.8.3"
   }
 }

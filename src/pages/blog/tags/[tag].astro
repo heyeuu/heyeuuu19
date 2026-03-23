@@ -1,0 +1,95 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Card from "@/components/Card.astro";
+import TaxonomyDirectory from "@/components/blog/TaxonomyDirectory.astro";
+import TaxonomyLink from "@/components/blog/TaxonomyLink.astro";
+import { getCollection } from "astro:content";
+import {
+  getPublishedBlogPosts,
+  getSeriesGroups,
+  getTagGroups,
+  getTagPath,
+  type TaxonomyGroup,
+} from "@/utils/blog";
+
+export async function getStaticPaths() {
+  const posts = getPublishedBlogPosts(await getCollection("blog"));
+  const tagGroups = getTagGroups(posts);
+
+  return tagGroups.map((group) => ({
+    params: { tag: group.slug },
+    props: { group },
+  }));
+}
+
+interface Props {
+  group: TaxonomyGroup;
+}
+
+const { group }: Props = Astro.props;
+const relatedSeries = getSeriesGroups(group.posts);
+const description = `Posts tagged ${group.name}.`;
+---
+
+<Layout title={`Tag: ${group.name}`} description={description}>
+  <section class="container mx-auto space-y-10 px-6 pt-18">
+    <div class="space-y-5">
+      <a
+        href="/blog/tags"
+        class="text-secondary hover:text-foreground inline-flex text-sm underline decoration-dashed underline-offset-4 transition-colors"
+      >
+        All tags
+      </a>
+
+      <div
+        class="border-secondary/60 bg-background/85 space-y-5 rounded-[2rem] border border-dashed p-6 md:p-8"
+      >
+        <div class="space-y-3">
+          <p class="text-secondary text-xs tracking-[0.3em] uppercase">
+            Tag Archive
+          </p>
+          <h1 class="heading text-4xl uppercase md:text-6xl">#{group.name}</h1>
+          <p class="text-secondary max-w-3xl">
+            {group.postCount}
+            {group.postCount === 1 ? "post" : "posts"} filed under this topic.
+          </p>
+        </div>
+
+        <TaxonomyLink
+          href={getTagPath(group.name)}
+          label={group.name}
+          kind="tag"
+          count={group.postCount}
+          current={true}
+        />
+      </div>
+    </div>
+
+    {
+      relatedSeries.length > 0 && (
+        <TaxonomyDirectory
+          title="Series With This Tag"
+          description="Some posts under this topic also belong to a broader series."
+          groups={relatedSeries}
+          kind="series"
+          limit={6}
+        />
+      )
+    }
+
+    <section class="space-y-4">
+      <div
+        class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between"
+      >
+        <div>
+          <p class="text-secondary text-xs tracking-[0.3em] uppercase">Posts</p>
+          <h2 class="heading text-2xl uppercase md:text-4xl">Tagged Posts</h2>
+        </div>
+      </div>
+
+      <ul class="not-prose flex flex-col gap-4">
+        {group.posts.map((post) => <Card entry={post} />)}
+      </ul>
+    </section>
+  </section>
+</Layout>

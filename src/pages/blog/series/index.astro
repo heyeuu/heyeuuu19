@@ -1,0 +1,58 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import EmptyCollectionState from "@/components/EmptyCollectionState.astro";
+import TaxonomyDirectory from "@/components/blog/TaxonomyDirectory.astro";
+import { getCollection } from "astro:content";
+import { getPublishedBlogPosts, getSeriesGroups } from "@/utils/blog";
+
+const posts = getPublishedBlogPosts(await getCollection("blog"));
+const seriesGroups = getSeriesGroups(posts);
+const description =
+  "Browse every blog series and follow connected posts in reading order.";
+---
+
+<Layout title="Series" description={description}>
+  <section class="container mx-auto space-y-10 px-6 pt-18">
+    <div class="space-y-5">
+      <a
+        href="/blog"
+        class="text-secondary hover:text-foreground inline-flex text-sm underline decoration-dashed underline-offset-4 transition-colors"
+      >
+        Back to blog
+      </a>
+
+      <div
+        class="border-secondary/60 bg-primary/45 space-y-4 rounded-[2rem] border border-dashed p-6 md:p-8"
+      >
+        <p class="text-secondary text-xs tracking-[0.3em] uppercase">
+          Series Archive
+        </p>
+        <h1 class="heading text-4xl uppercase md:text-6xl">Series</h1>
+        <p class="text-secondary max-w-3xl">{description}</p>
+        <div class="text-secondary flex flex-wrap gap-6 text-sm">
+          <span>{seriesGroups.length} series</span>
+          <span>{posts.length} published posts</span>
+        </div>
+      </div>
+    </div>
+
+    {
+      seriesGroups.length > 0 ? (
+        <TaxonomyDirectory
+          title="All Series"
+          description="Series are ordered by their most recent update, so active threads stay near the top."
+          groups={seriesGroups}
+          kind="series"
+        />
+      ) : (
+        <EmptyCollectionState
+          eyebrow="Series Archive Empty"
+          title="No series yet"
+          description="Series show up automatically once published posts share the same `series` value in frontmatter."
+          href="/blog"
+          linkLabel="Back to blog"
+        />
+      )
+    }
+  </section>
+</Layout>

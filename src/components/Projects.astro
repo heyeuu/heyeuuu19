@@ -1,5 +1,6 @@
 ---
 import Card from "./Card.astro";
+import EmptyCollectionState from "@/components/EmptyCollectionState.astro";
 
 import { getCollection, type CollectionEntry } from "astro:content";
 import { sortProjects } from "@/utils/projects";
@@ -32,7 +33,21 @@ const allProjects: CollectionEntry<"projects">[] = sortProjects(
       </div>
     </div>
   </div>
-  {allProjects.map((project) => <Card entry={project} />)}
+  {
+    allProjects.length > 0 ? (
+      <ul class="not-prose flex flex-col gap-4">
+        {allProjects.map((project) => <Card entry={project} />)}
+      </ul>
+    ) : (
+      <EmptyCollectionState
+        eyebrow="Work In Progress"
+        title="No projects published yet"
+        description="Add Markdown entries to `src/content/projects` and they will appear here automatically."
+        href="/projects"
+        linkLabel="Open projects"
+      />
+    )
+  }
 </section>
 
 <style>

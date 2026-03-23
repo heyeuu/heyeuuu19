@@ -1,0 +1,62 @@
+---
+import TaxonomyLink from "@/components/blog/TaxonomyLink.astro";
+import {
+  getSeriesPath,
+  getTagPath,
+  type TaxonomyGroup,
+  type TaxonomyKind,
+} from "@/utils/blog";
+
+type Props = {
+  title: string;
+  description: string;
+  groups: TaxonomyGroup[];
+  kind: TaxonomyKind;
+  limit?: number;
+};
+
+const { title, description, groups, kind, limit } = Astro.props as Props;
+const visibleGroups =
+  typeof limit === "number" ? groups.slice(0, limit) : groups;
+const archivePath = kind === "tag" ? "/blog/tags" : "/blog/series";
+---
+
+<section class="space-y-4">
+  <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+    <div class="space-y-2">
+      <p class="text-secondary text-xs tracking-[0.3em] uppercase">{title}</p>
+      <p class="text-secondary max-w-2xl">{description}</p>
+    </div>
+    {
+      typeof limit === "number" && groups.length > limit && (
+        <a
+          href={archivePath}
+          class="text-secondary hover:text-foreground text-sm underline decoration-dashed underline-offset-4 transition-colors"
+        >
+          View all
+        </a>
+      )
+    }
+  </div>
+
+  {
+    visibleGroups.length > 0 ? (
+      <div class="flex flex-wrap gap-3">
+        {visibleGroups.map((group) => (
+          <TaxonomyLink
+            href={
+              kind === "tag"
+                ? getTagPath(group.name)
+                : getSeriesPath(group.name)
+            }
+            label={group.name}
+            kind={kind}
+            count={group.postCount}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="text-secondary">No {kind === "tag" ? "tags" : "series"} yet.</p>
+    )
+  }
+</section>

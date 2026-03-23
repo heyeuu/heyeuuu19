@@ -1,21 +1,22 @@
 ---
 import Card from "./Card.astro";
+import EmptyCollectionState from "@/components/EmptyCollectionState.astro";
 
 import { getCollection, type CollectionEntry } from "astro:content";
+import { getPublishedBlogPosts } from "@/utils/blog";
 
-const allPosts: CollectionEntry<"blog">[] = (await getCollection("blog"))
-  .filter((post) => !post.data.draft)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, 3);
+const allPosts: CollectionEntry<"blog">[] = getPublishedBlogPosts(
+  await getCollection("blog"),
+).slice(0, 3);
 ---
 
-<section id="Projects" class="container mx-auto px-6 mt-18">
-  <div class="overflow-hidden mb-12">
-    <div class="flex animate-scroll">
+<section id="Posts" class="container mx-auto mt-18 px-6">
+  <div class="mb-12 overflow-hidden">
+    <div class="animate-scroll flex">
       <div class="flex shrink-0 whitespace-nowrap">
         {
           Array.from({ length: 10 }).map((_) => (
-            <h2 class="heading text-5xl md:text-9xl uppercase mr-4 md:mr-8 -mb-2">
+            <h2 class="heading mr-4 -mb-2 text-5xl uppercase md:mr-8 md:text-9xl">
               Posts
             </h2>
           ))
@@ -24,7 +25,7 @@ const allPosts: CollectionEntry<"blog">[] = (await getCollection("blog"))
       <div class="flex shrink-0 whitespace-nowrap" aria-hidden="true">
         {
           Array.from({ length: 10 }).map((_) => (
-            <h2 class="heading text-5xl md:text-9xl uppercase mr-4 md:mr-8 -mb-2">
+            <h2 class="heading mr-4 -mb-2 text-5xl uppercase md:mr-8 md:text-9xl">
               Posts
             </h2>
           ))
@@ -32,7 +33,21 @@ const allPosts: CollectionEntry<"blog">[] = (await getCollection("blog"))
       </div>
     </div>
   </div>
-  {allPosts.map((post) => <Card entry={post} />)}
+  {
+    allPosts.length > 0 ? (
+      <ul class="not-prose flex flex-col gap-4">
+        {allPosts.map((post) => <Card entry={post} />)}
+      </ul>
+    ) : (
+      <EmptyCollectionState
+        eyebrow="Archive Empty"
+        title="No published posts yet"
+        description="This section fills automatically once `src/content/blog` contains non-draft Markdown entries."
+        href="/blog"
+        linkLabel="Open the blog archive"
+      />
+    )
+  }
 </section>
 
 <style>
