@@ -25,6 +25,7 @@ const blogEntry =
         return;
       }
 
+      const cursorCircle: HTMLElement = circle;
       let targetX: number = 0;
       let targetY: number = 0;
       let currentX: number = 0;
@@ -38,9 +39,9 @@ const blogEntry =
         targetY = e.clientY - rect.top;
         currentX = targetX;
         currentY = targetY;
-        circle.style.left = `${currentX}px`;
-        circle.style.top = `${currentY}px`;
-        circle.style.opacity = "1";
+        cursorCircle.style.left = `${currentX}px`;
+        cursorCircle.style.top = `${currentY}px`;
+        cursorCircle.style.opacity = "1";
         isHovering = true;
         if (!animationFrameId) {
           animateCursor();
@@ -55,7 +56,7 @@ const blogEntry =
 
       cardElement.addEventListener("mouseleave", () => {
         isHovering = false;
-        circle.style.opacity = "0";
+        cursorCircle.style.opacity = "0";
         if (animationFrameId) {
           cancelAnimationFrame(animationFrameId);
           animationFrameId = null;
@@ -68,8 +69,8 @@ const blogEntry =
         currentX += (targetX - currentX) * speed;
         currentY += (targetY - currentY) * speed;
 
-        circle.style.left = `${currentX}px`;
-        circle.style.top = `${currentY}px`;
+        cursorCircle.style.left = `${currentX}px`;
+        cursorCircle.style.top = `${currentY}px`;
 
         animationFrameId = requestAnimationFrame(animateCursor);
       }

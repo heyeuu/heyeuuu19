@@ -1,8 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
-import { runCheck } from "./commands/check.mjs";
-import { runNew } from "./commands/new.mjs";
-import { runPatch } from "./commands/patch.mjs";
+import { runCheck } from "./commands/check.ts";
+import { runNew } from "./commands/new.ts";
+import { runPatch } from "./commands/patch.ts";
 
 const [command, ...rest] = process.argv.slice(2);
 
@@ -10,14 +10,14 @@ const COMMANDS = {
   new: runNew,
   check: runCheck,
   patch: runPatch,
-};
+} satisfies Record<string, (argv: string[]) => Promise<void>>;
 
 if (!command || command === "--help" || command === "help") {
   printHelp();
   process.exit(0);
 }
 
-const handler = COMMANDS[command];
+const handler = COMMANDS[command as keyof typeof COMMANDS];
 
 if (!handler) {
   process.stderr.write(`Unknown command: ${command}\n\n`);
@@ -27,8 +27,10 @@ if (!handler) {
 
 try {
   await handler(rest);
-} catch (error) {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+} catch (error: unknown) {
+  process.stderr.write(
+    `${error instanceof Error ? error.message : String(error)}\n`,
+  );
   process.exit(1);
 }
 

@@ -262,7 +262,7 @@ image:
 
 ## 7. 用内容 CLI 管理博客和项目
 
-这个仓库已经内置一套内容 CLI，入口在 `scripts/content/index.mjs`。
+这个仓库已经内置一套内容 CLI，入口在 `scripts/content/index.ts`。
 
 ### 常用命令
 
@@ -272,12 +272,12 @@ bun run content:check
 bun run content:patch -- --type blog --set draft=false
 ```
 
-也可以直接用 Node：
+也可以直接用 Bun 运行脚本入口：
 
 ```bash
-node scripts/content/index.mjs new
-node scripts/content/index.mjs check
-node scripts/content/index.mjs patch --type blog --set draft=false
+bun ./scripts/content/index.ts new
+bun ./scripts/content/index.ts check
+bun ./scripts/content/index.ts patch --type blog --set draft=false
 ```
 
 ### 新建内容

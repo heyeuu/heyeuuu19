@@ -1,6 +1,15 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type {
+  CollectionDefinition,
+  ContentIssue,
+  CreateTemplateInput,
+  FrontmatterObject,
+  FrontmatterValue,
+  SupportedCollectionKey,
+} from "./types.ts";
+
 const ROOT_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../../..",
@@ -31,7 +40,7 @@ export const COLLECTIONS = {
     directory: path.join(ROOT_DIR, "src/content/blog"),
     fieldOrder: BLOG_FIELD_ORDER,
     requiredFields: ["title", "description", "date"],
-    createTemplate({ title, slug, date }) {
+    createTemplate({ title, slug, date }: CreateTemplateInput) {
       return `---
 title: ${JSON.stringify(title)}
 description: "TODO: add a short summary."
@@ -58,8 +67,8 @@ TODO: write the opening summary.
 - TODO: add links or follow-up material
 `;
     },
-    validate(data, relativePath) {
-      const issues = [];
+    validate(data: FrontmatterObject, relativePath: string) {
+      const issues: ContentIssue[] = [];
 
       if (!isNonEmptyString(data.title)) {
         issues.push(
@@ -171,7 +180,7 @@ TODO: write the opening summary.
     directory: path.join(ROOT_DIR, "src/content/projects"),
     fieldOrder: PROJECT_FIELD_ORDER,
     requiredFields: ["title", "description", "image"],
-    createTemplate({ title, slug }) {
+    createTemplate({ title, slug }: CreateTemplateInput) {
       return `---
 title: ${JSON.stringify(title)}
 description: "TODO: add a one-line project summary."
@@ -199,8 +208,8 @@ TODO: explain what the project does.
 TODO: describe the result and lessons learned.
 `;
     },
-    validate(data, relativePath) {
-      const issues = [];
+    validate(data: FrontmatterObject, relativePath: string) {
+      const issues: ContentIssue[] = [];
 
       if (!isNonEmptyString(data.title)) {
         issues.push(
@@ -282,10 +291,10 @@ TODO: describe the result and lessons learned.
       return issues;
     },
   },
-};
+} satisfies Record<SupportedCollectionKey, CollectionDefinition>;
 
-export function getCollection(key) {
-  const collection = COLLECTIONS[key];
+export function getCollection(key: string): CollectionDefinition {
+  const collection = COLLECTIONS[key as SupportedCollectionKey];
   if (!collection) {
     throw new Error(`Unsupported collection: ${key}`);
   }
@@ -293,7 +302,7 @@ export function getCollection(key) {
   return collection;
 }
 
-export function getCollectionEntries(key) {
+export function getCollectionEntries(key?: string): CollectionDefinition[] {
   if (key) {
     return [getCollection(key)];
   }
@@ -301,8 +310,11 @@ export function getCollectionEntries(key) {
   return Object.values(COLLECTIONS);
 }
 
-export function normalizeFrontmatter(collection, data) {
-  const normalized = {};
+export function normalizeFrontmatter(
+  collection: CollectionDefinition,
+  data: FrontmatterObject,
+): FrontmatterObject {
+  const normalized: FrontmatterObject = {};
 
   for (const field of collection.fieldOrder) {
     if (data[field] !== undefined) {
@@ -311,7 +323,7 @@ export function normalizeFrontmatter(collection, data) {
   }
 
   for (const [key, value] of Object.entries(data)) {
-    if (normalized[key] === undefined) {
+    if (normalized[key] === undefined && value !== undefined) {
       normalized[key] = normalizeValue(key, value);
     }
   }
@@ -319,11 +331,10 @@ export function normalizeFrontmatter(collection, data) {
   return normalized;
 }
 
-function normalizeValue(key, value) {
-  if (value === undefined) {
-    return undefined;
-  }
-
+function normalizeValue(
+  key: string,
+  value: FrontmatterValue,
+): FrontmatterValue {
   if (key === "image" && isImageObject(value)) {
     return {
       url: value.url,
@@ -335,39 +346,44 @@ function normalizeValue(key, value) {
     return value.map((item) => normalizeValue("", item));
   }
 
-  if (value && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value)
-        .filter(([, item]) => item !== undefined)
-        .map(([itemKey, itemValue]) => [
-          itemKey,
-          normalizeValue(itemKey, itemValue),
-        ]),
-    );
+  if (isPlainObject(value)) {
+    const normalizedObject: FrontmatterObject = {};
+
+    for (const [itemKey, itemValue] of Object.entries(value)) {
+      if (itemValue !== undefined) {
+        normalizedObject[itemKey] = normalizeValue(itemKey, itemValue);
+      }
+    }
+
+    return normalizedObject;
   }
 
   return value;
 }
 
-function issue(level, pathValue, message) {
+function issue(
+  level: ContentIssue["level"],
+  pathValue: string,
+  message: string,
+): ContentIssue {
   return { level, path: pathValue, message };
 }
 
-function isImageObject(value) {
+function isImageObject(
+  value: unknown,
+): value is FrontmatterObject & { url: string; alt: string } {
   return Boolean(
-    value &&
-    typeof value === "object" &&
-    !Array.isArray(value) &&
+    isPlainObject(value) &&
     isNonEmptyString(value.url) &&
     isNonEmptyString(value.alt),
   );
 }
 
-function isNonEmptyString(value) {
+function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-function isTodoPlaceholder(value) {
+function isTodoPlaceholder(value: unknown): boolean {
   if (!isNonEmptyString(value)) {
     return false;
   }
@@ -376,4 +392,8 @@ function isTodoPlaceholder(value) {
     /^todo:/i.test(value.trim()) ||
     /example\.com|yourname|placeholder/i.test(value)
   );
+}
+
+function isPlainObject(value: unknown): value is FrontmatterObject {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }

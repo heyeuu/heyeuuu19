@@ -3,24 +3,25 @@ import fs from "node:fs/promises";
 import {
   getCollectionEntries,
   normalizeFrontmatter,
-} from "../core/collections.mjs";
-import { parseMarkdownFile } from "../core/frontmatter.mjs";
+} from "../core/collections.ts";
+import { parseMarkdownFile } from "../core/frontmatter.ts";
 import {
   formatIssue,
   getContentId,
-  getFlag,
+  getStringFlag,
   isValidSlug,
   listContentFiles,
   normalizeCollectionKey,
   parseArgs,
   relativeContentPath,
-} from "../core/utils.mjs";
+} from "../core/utils.ts";
+import type { ContentIssue } from "../core/types.ts";
 
-export async function runCheck(argv) {
+export async function runCheck(argv: string[]): Promise<void> {
   const { flags } = parseArgs(argv);
-  const collectionKey = normalizeCollectionKey(getFlag(flags, "type"));
+  const collectionKey = normalizeCollectionKey(getStringFlag(flags, "type"));
   const collections = getCollectionEntries(collectionKey);
-  const issues = [];
+  const issues: ContentIssue[] = [];
 
   for (const collection of collections) {
     const files = await listContentFiles(collection.directory);
@@ -47,11 +48,11 @@ export async function runCheck(argv) {
 
         const normalized = normalizeFrontmatter(collection, parsed.data);
         issues.push(...collection.validate(normalized, relativePath));
-      } catch (error) {
+      } catch (error: unknown) {
         issues.push({
           level: "error",
           path: relativePath,
-          message: error.message,
+          message: error instanceof Error ? error.message : String(error),
         });
       }
     }
@@ -69,8 +70,11 @@ export async function runCheck(argv) {
   process.exitCode = issues.some((issue) => issue.level === "error") ? 1 : 0;
 }
 
-function validateContentId(relativePath, contentId) {
-  const issues = [];
+function validateContentId(
+  relativePath: string,
+  contentId: string,
+): ContentIssue[] {
+  const issues: ContentIssue[] = [];
   const segments = contentId.split("/");
 
   for (const segment of segments) {

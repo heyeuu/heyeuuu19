@@ -1,30 +1,45 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import prompts from "prompts";
+import prompts, { type PromptObject } from "prompts";
 
-import { getCollection } from "../core/collections.mjs";
+import { getCollection } from "../core/collections.ts";
 import {
   getFlag,
+  getStringFlag,
   isValidSlug,
   normalizeCollectionKey,
   parseArgs,
   slugify,
   today,
-} from "../core/utils.mjs";
+} from "../core/utils.ts";
 
-export async function runNew(argv) {
+type ContentFormat = "md" | "mdx";
+
+interface PromptAnswers {
+  [key: string]: unknown;
+  collectionKey?: string;
+  title?: string;
+  slug?: string;
+  format?: ContentFormat;
+}
+
+type NewAnswers = PromptAnswers & {
+  format: ContentFormat;
+};
+
+export async function runNew(argv: string[]): Promise<void> {
   const { flags } = parseArgs(argv);
-  const collectionKey = normalizeCollectionKey(getFlag(flags, "type"));
+  const collectionKey = normalizeCollectionKey(getStringFlag(flags, "type"));
   const format = normalizeFormat(
-    getFlag(flags, "format") ?? (getFlag(flags, "mdx") ? "mdx" : "md"),
+    getStringFlag(flags, "format") ?? (getFlag(flags, "mdx") ? "mdx" : "md"),
   );
-  const titleFromFlag = getFlag(flags, "title");
-  const slugFromFlag = getFlag(flags, "slug");
+  const titleFromFlag = getStringFlag(flags, "title");
+  const slugFromFlag = getStringFlag(flags, "slug");
   const dryRun = Boolean(getFlag(flags, "dry-run"));
   const interactive = !getFlag(flags, "no-prompt");
 
-  const answers = interactive
+  const answers: NewAnswers = interactive
     ? await askQuestions({
         collectionKey,
         title: titleFromFlag,
@@ -68,8 +83,8 @@ export async function runNew(argv) {
   try {
     await fs.access(filePath);
     throw new Error(`File already exists: ${filePath}`);
-  } catch (error) {
-    if (error?.code !== "ENOENT") {
+  } catch (error: unknown) {
+    if (getErrorCode(error) !== "ENOENT") {
       throw error;
     }
   }
@@ -99,52 +114,51 @@ export async function runNew(argv) {
   );
 }
 
-async function askQuestions(initialValues) {
-  const response = await prompts(
-    [
-      {
-        type: initialValues.collectionKey ? null : "select",
-        name: "collectionKey",
-        message: "选择内容类型",
-        choices: [
-          { title: "Blog post", value: "blog" },
-          { title: "Project", value: "projects" },
-        ],
-      },
-      {
-        type: initialValues.title ? null : "text",
-        name: "title",
-        message: "请输入标题",
-        validate: (value) => (value.trim() ? true : "标题不能为空"),
-      },
-      {
-        type: "text",
-        name: "slug",
-        message: "确认 slug",
-        initial: (_, previousAnswers) =>
-          initialValues.slug ??
-          slugify(initialValues.title ?? previousAnswers.title ?? ""),
-        validate: (value) =>
-          isValidSlug(value.trim())
-            ? true
-            : "slug 只能包含小写字母、数字和连字符",
-      },
-      {
-        type: initialValues.format ? null : "select",
-        name: "format",
-        message: "选择文件格式",
-        choices: [
-          { title: "Markdown (.md)", value: "md" },
-          { title: "MDX (.mdx)", value: "mdx" },
-        ],
-      },
-    ],
+async function askQuestions(initialValues: NewAnswers): Promise<NewAnswers> {
+  const questions: PromptObject<PromptAnswers>[] = [
     {
-      onCancel: () => {
-        throw new Error("Command cancelled.");
-      },
+      type: initialValues.collectionKey ? null : "select",
+      name: "collectionKey",
+      message: "选择内容类型",
+      choices: [
+        { title: "Blog post", value: "blog" },
+        { title: "Project", value: "projects" },
+      ],
     },
-  );
+    {
+      type: initialValues.title ? null : "text",
+      name: "title",
+      message: "请输入标题",
+      validate: (value) => (value.trim() ? true : "标题不能为空"),
+    },
+    {
+      type: "text",
+      name: "slug",
+      message: "确认 slug",
+      initial: (_previous, previousAnswers) =>
+        initialValues.slug ??
+        slugify(initialValues.title ?? previousAnswers.title ?? ""),
+      validate: (value) =>
+        isValidSlug(value.trim())
+          ? true
+          : "slug 只能包含小写字母、数字和连字符",
+    },
+    {
+      type: initialValues.format ? null : "select",
+      name: "format",
+      message: "选择文件格式",
+      choices: [
+        { title: "Markdown (.md)", value: "md" },
+        { title: "MDX (.mdx)", value: "mdx" },
+      ],
+    },
+  ];
+
+  const response = await prompts<PromptAnswers>(questions, {
+    onCancel: () => {
+      throw new Error("Command cancelled.");
+    },
+  });
 
   return {
     collectionKey: initialValues.collectionKey ?? response.collectionKey,
@@ -154,10 +168,19 @@ async function askQuestions(initialValues) {
   };
 }
 
-function normalizeFormat(value) {
+function normalizeFormat(value: string): ContentFormat {
   if (value === "md" || value === "mdx") {
     return value;
   }
 
   throw new Error("Format must be `md` or `mdx`.");
+}
+
+function getErrorCode(error: unknown): string | undefined {
+  if (!error || typeof error !== "object" || !("code" in error)) {
+    return undefined;
+  }
+
+  const { code } = error as { code?: unknown };
+  return typeof code === "string" ? code : undefined;
 }

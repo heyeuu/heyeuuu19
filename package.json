@@ -8,10 +8,10 @@
     "build:force": "astro build --force",
     "preview": "astro preview",
     "astro": "astro",
-    "content": "node ./scripts/content/index.mjs",
-    "content:new": "node ./scripts/content/index.mjs new",
-    "content:check": "node ./scripts/content/index.mjs check",
-    "content:patch": "node ./scripts/content/index.mjs patch"
+    "content": "bun ./scripts/content/index.ts",
+    "content:new": "bun ./scripts/content/index.ts new",
+    "content:check": "bun ./scripts/content/index.ts check",
+    "content:patch": "bun ./scripts/content/index.ts patch"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.1",

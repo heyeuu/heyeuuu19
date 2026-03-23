@@ -1,6 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import type {
+  ContentIssue,
+  FrontmatterObject,
+  FrontmatterValue,
+  ParsedArgs,
+} from "./types.ts";
+
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const RESERVED_PATH_SEGMENTS = new Set([
   "__proto__",
@@ -8,9 +15,9 @@ const RESERVED_PATH_SEGMENTS = new Set([
   "constructor",
 ]);
 
-export function parseArgs(argv) {
-  const positional = [];
-  const flags = {};
+export function parseArgs(argv: string[]): ParsedArgs {
+  const positional: string[] = [];
+  const flags: ParsedArgs["flags"] = {};
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -43,12 +50,18 @@ export function parseArgs(argv) {
   return { positional, flags };
 }
 
-export function getFlag(flags, key) {
+export function getFlag(
+  flags: ParsedArgs["flags"],
+  key: string,
+): string | boolean | undefined {
   const value = flags[key];
   return Array.isArray(value) ? value[value.length - 1] : value;
 }
 
-export function getAllFlags(flags, key) {
+export function getAllFlags(
+  flags: ParsedArgs["flags"],
+  key: string,
+): Array<string | boolean> {
   const value = flags[key];
   if (value === undefined) {
     return [];
@@ -56,8 +69,40 @@ export function getAllFlags(flags, key) {
   return Array.isArray(value) ? value : [value];
 }
 
-export function normalizeCollectionKey(value) {
-  if (!value) {
+export function getStringFlag(
+  flags: ParsedArgs["flags"],
+  key: string,
+): string | undefined {
+  const value = getFlag(flags, key);
+
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== "string") {
+    throw new Error(`\`--${key}\` requires a value.`);
+  }
+
+  return value;
+}
+
+export function getAllStringFlags(
+  flags: ParsedArgs["flags"],
+  key: string,
+): string[] {
+  const values = getAllFlags(flags, key);
+
+  if (values.some((value) => typeof value !== "string")) {
+    throw new Error(`\`--${key}\` requires a value.`);
+  }
+
+  return values.filter((value): value is string => typeof value === "string");
+}
+
+export function normalizeCollectionKey(
+  value: string | boolean | undefined,
+): string | undefined {
+  if (typeof value !== "string" || !value) {
     return undefined;
   }
 
@@ -68,7 +113,7 @@ export function normalizeCollectionKey(value) {
   return value;
 }
 
-export function slugify(input) {
+export function slugify(input: string): string {
   return input
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -78,11 +123,11 @@ export function slugify(input) {
     .replace(/-{2,}/g, "-");
 }
 
-export function isValidSlug(slug) {
+export function isValidSlug(slug: string): boolean {
   return SLUG_PATTERN.test(slug);
 }
 
-export function today() {
+export function today(): string {
   const now = new Date();
   const year = String(now.getFullYear());
   const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -90,9 +135,9 @@ export function today() {
   return `${year}-${month}-${day}`;
 }
 
-export async function listContentFiles(directory) {
+export async function listContentFiles(directory: string): Promise<string[]> {
   const entries = await fs.readdir(directory, { withFileTypes: true });
-  const files = [];
+  const files: string[] = [];
 
   for (const entry of entries) {
     const fullPath = path.join(directory, entry.name);
@@ -110,17 +155,24 @@ export async function listContentFiles(directory) {
   return files.sort();
 }
 
-export function relativeContentPath(collection, filePath) {
+export function relativeContentPath(
+  collection: { directory: string },
+  filePath: string,
+): string {
   return path
     .relative(collection.directory, filePath)
     .replaceAll(path.sep, "/");
 }
 
-export function getContentId(relativePath) {
+export function getContentId(relativePath: string): string {
   return relativePath.replace(/\.(md|mdx)$/i, "");
 }
 
-export function setValueAtPath(target, dottedPath, value) {
+export function setValueAtPath(
+  target: FrontmatterObject,
+  dottedPath: string,
+  value: FrontmatterValue,
+): void {
   const keys = dottedPath.split(".");
   const lastKey = keys.pop();
 
@@ -130,32 +182,36 @@ export function setValueAtPath(target, dottedPath, value) {
 
   assertSafePathSegment(lastKey, dottedPath);
 
-  let current = target;
+  let current: FrontmatterObject = target;
   for (const [index, key] of keys.entries()) {
     assertSafePathSegment(key, dottedPath);
 
     const next = current[key];
 
     if (next === undefined) {
-      current[key] = {};
-      current = current[key];
+      const nextObject: FrontmatterObject = {};
+      current[key] = nextObject;
+      current = nextObject;
       continue;
     }
 
-    if (!next || typeof next !== "object" || Array.isArray(next)) {
+    if (!isPlainObject(next)) {
       const traversedPath = keys.slice(0, index + 1).join(".");
       throw new Error(
         `Cannot set field path "${dottedPath}": "${traversedPath}" already contains ${formatPathValue(next)}.`,
       );
     }
 
-    current = current[key];
+    current = next;
   }
 
   current[lastKey] = value;
 }
 
-export function deleteValueAtPath(target, dottedPath) {
+export function deleteValueAtPath(
+  target: FrontmatterObject,
+  dottedPath: string,
+): void {
   const keys = dottedPath.split(".");
   const lastKey = keys.pop();
 
@@ -165,42 +221,47 @@ export function deleteValueAtPath(target, dottedPath) {
 
   assertSafePathSegment(lastKey, dottedPath);
 
-  let current = target;
+  let current: FrontmatterObject = target;
   for (const key of keys) {
     assertSafePathSegment(key, dottedPath);
 
-    if (
-      !current[key] ||
-      typeof current[key] !== "object" ||
-      Array.isArray(current[key])
-    ) {
+    const next = current[key];
+
+    if (!isPlainObject(next)) {
       return;
     }
-    current = current[key];
+
+    current = next;
   }
 
   delete current[lastKey];
 }
 
-export function formatIssue(issue) {
+export function formatIssue(issue: ContentIssue): string {
   return `${issue.level.toUpperCase()} ${issue.path}: ${issue.message}`;
 }
 
-function appendFlag(flags, key, value) {
-  if (flags[key] === undefined) {
+function appendFlag(
+  flags: ParsedArgs["flags"],
+  key: string,
+  value: string | boolean,
+): void {
+  const existing = flags[key];
+
+  if (existing === undefined) {
     flags[key] = value;
     return;
   }
 
-  if (Array.isArray(flags[key])) {
-    flags[key].push(value);
+  if (Array.isArray(existing)) {
+    existing.push(value);
     return;
   }
 
-  flags[key] = [flags[key], value];
+  flags[key] = [existing, value];
 }
 
-function formatPathValue(value) {
+function formatPathValue(value: unknown): string {
   const formatted = JSON.stringify(value);
   if (formatted !== undefined) {
     return formatted;
@@ -209,10 +270,14 @@ function formatPathValue(value) {
   return String(value);
 }
 
-function assertSafePathSegment(segment, dottedPath) {
+function assertSafePathSegment(segment: string, dottedPath: string): void {
   if (RESERVED_PATH_SEGMENTS.has(segment)) {
     throw new Error(
       `Invalid field path "${dottedPath}": segment "${segment}" is not allowed.`,
     );
   }
+}
+
+function isPlainObject(value: unknown): value is FrontmatterObject {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
