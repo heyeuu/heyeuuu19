@@ -31,3 +31,10 @@ article {
   @apply prose-headings:font-bold prose-headings:font-plex prose-headings:text-foreground mx-auto;
   @apply text-secondary prose-a:underline-offset-2;
 }
+
+article
+  :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::before,
+article
+  :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::after {
+  content: "";
+}
