@@ -179,10 +179,9 @@ npm run build
 ## 💡 常见问题排查（FAQ）
 
 Q：修改了样式但页面没变化？
-A：检查 Tailwind 类名拼写，或确保 `tailwind.config.mjs` 的 content 路径包含了该文件。
+A：检查 Tailwind 类名拼写，并确认 `src/styles/global.css` 中的 Tailwind v4 配置（如 `@import "tailwindcss";` 和 `@theme`）已生效。
 
 Q：图片无法显示？
 A：`public/` 下的图片引用需以 `/` 开头。`src/assets/` 下的图片建议使用 `<Image />` 组件。
 
 🎉 祝顺利！如果模板内附带有 `README.md`，也建议您一并阅读。
-
