@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
 
 @plugin '@tailwindcss/typography';
 
@@ -48,4 +49,8 @@ article
     :where([class~="not-prose"], [class~="not-prose"] *)
   )::after {
   content: "";
+}
+
+article .katex-display {
+  @apply overflow-x-auto overflow-y-hidden py-2;
 }
