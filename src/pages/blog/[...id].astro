@@ -95,18 +95,6 @@ const { Content } = await render(post);
         </a>
       </div>
     </div>
-    {
-      post.data.image && (
-        <div class="aspect-[610/400] w-full overflow-hidden rounded-2xl lg:h-[70vh]">
-          <img
-            src={post.data.image?.url}
-            alt={post.data.image?.alt}
-            class="h-full w-full object-contain"
-          />
-        </div>
-      )
-    }
-
     <article class="mx-auto mb-18 flex-2 px-3">
       <Content />
     </article>
