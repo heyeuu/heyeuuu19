@@ -133,10 +133,11 @@
 
   <div style="display: flex; gap: 18px; margin-top: 16px; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 220px;">
-      <label style="display: block; margin-bottom: 8px; font-weight: 700;">
+      <label for="r-value-range" style="display: block; margin-bottom: 8px; font-weight: 700;">
         输入浮点数 R: {rValue.toFixed(2)}
       </label>
       <input
+        id="r-value-range"
         type="range"
         min={rMin}
         max={rMax}
@@ -148,10 +149,10 @@
     </div>
 
     <div>
-      <label style="display: block; margin-bottom: 8px; font-weight: 700;">
+      <label for="bit-width-select" style="display: block; margin-bottom: 8px; font-weight: 700;">
         目标位宽
       </label>
-      <select value={bitWidth} on:change={handleBitChange} style="padding: 4px 8px;">
+      <select id="bit-width-select" value={bitWidth} on:change={handleBitChange} style="padding: 4px 8px;">
         <option value="8">UINT8 (0-255)</option>
         <option value="4">UINT4 (0-15)</option>
         <option value="2">UINT2 (0-3)</option>
