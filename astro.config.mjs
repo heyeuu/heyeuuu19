@@ -1,6 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, fontProviders } from "astro/config";
 import mdx from "@astrojs/mdx";
+import svelte from "@astrojs/svelte";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 
@@ -30,5 +31,5 @@ export default defineConfig({
       provider: fontProviders.google(),
     },
   ],
-  integrations: [mdx(), sitemap()],
+  integrations: [mdx(), svelte(), sitemap()],
 });
