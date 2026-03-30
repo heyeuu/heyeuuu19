@@ -11,14 +11,14 @@
   const rMax = 6.0;
   const qMin = 0;
 
-  let qMax = (1 << bitWidth) - 1;
-  let scale = (rMax - rMin) / (qMax - qMin);
-  let zeroPointRaw = qMin - rMin / scale;
-  let zeroPoint = Math.round(zeroPointRaw);
-  let qFormulaValue = rValue / scale + zeroPoint;
-  let qVal = Math.max(qMin, Math.min(qMax, Math.round(qFormulaValue)));
-  let rQuantized = scale * (qVal - zeroPoint);
-  let error = Math.abs(rValue - rQuantized);
+  let qMax: number;
+  let scale: number;
+  let zeroPointRaw: number;
+  let zeroPoint: number;
+  let qFormulaValue: number;
+  let qVal: number;
+  let rQuantized: number;
+  let error: number;
 
   $: qMax = (1 << bitWidth) - 1;
   $: scale = (rMax - rMin) / (qMax - qMin);
