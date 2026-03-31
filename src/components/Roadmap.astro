@@ -1,0 +1,83 @@
+---
+import EmptyCollectionState from "@/components/EmptyCollectionState.astro";
+import RoadmapEntryList from "@/components/roadmap/RoadmapEntryList.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+import { sortRoadmapEntries } from "@/utils/roadmap";
+
+const roadmapEntries: CollectionEntry<"roadmap">[] = sortRoadmapEntries(
+  await getCollection("roadmap"),
+).slice(0, 3);
+---
+
+<section id="Roadmap" class="container mx-auto mt-18 px-6">
+  <div class="mb-12 overflow-hidden">
+    <div class="animate-scroll flex">
+      <div class="flex shrink-0 whitespace-nowrap">
+        {
+          Array.from({ length: 10 }).map((_) => (
+            <h2 class="heading mr-4 -mb-2 text-5xl uppercase md:mr-8 md:text-9xl">
+              Roadmap
+            </h2>
+          ))
+        }
+      </div>
+      <div class="flex shrink-0 whitespace-nowrap" aria-hidden="true">
+        {
+          Array.from({ length: 10 }).map((_) => (
+            <h2 class="heading mr-4 -mb-2 text-5xl uppercase md:mr-8 md:text-9xl">
+              Roadmap
+            </h2>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
+  >
+    <p class="text-secondary max-w-2xl">
+      Quick snapshot of current priorities and active work.
+    </p>
+    <a
+      href="/roadmap"
+      class="text-secondary hover:text-foreground inline-flex text-sm underline decoration-dashed underline-offset-4 transition-colors"
+    >
+      View full roadmap
+    </a>
+  </div>
+
+  {
+    roadmapEntries.length > 0 ? (
+      <RoadmapEntryList
+        entries={roadmapEntries}
+        compact={true}
+        showDescription={true}
+        showMeta={false}
+      />
+    ) : (
+      <EmptyCollectionState
+        eyebrow="Roadmap Empty"
+        title="No roadmap items yet"
+        description="Add Markdown entries to `src/content/roadmap` and they will appear on this page automatically."
+        href="/roadmap"
+        linkLabel="Open roadmap"
+      />
+    )
+  }
+</section>
+
+<style>
+  @keyframes scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-scroll {
+    animation: scroll 15s linear infinite;
+  }
+</style>

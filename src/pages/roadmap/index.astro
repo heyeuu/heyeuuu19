@@ -1,0 +1,97 @@
+---
+import EmptyCollectionState from "@/components/EmptyCollectionState.astro";
+import RoadmapEntryList from "@/components/roadmap/RoadmapEntryList.astro";
+import { ROADMAP } from "@/consts";
+import Layout from "@/layouts/Layout.astro";
+import {
+  type RoadmapStatus,
+  groupRoadmapEntries,
+  sortRoadmapEntries,
+} from "@/utils/roadmap";
+import { getCollection, type CollectionEntry } from "astro:content";
+
+const allRoadmapEntries: CollectionEntry<"roadmap">[] = sortRoadmapEntries(
+  await getCollection("roadmap"),
+);
+const groupedRoadmapEntries = groupRoadmapEntries(allRoadmapEntries).filter(
+  (group) => group.entries.length > 0,
+);
+const hasEntries = allRoadmapEntries.length > 0;
+
+const statusCounts: Record<RoadmapStatus, number> = {
+  doing: 0,
+  todo: 0,
+  done: 0,
+};
+
+for (const entry of allRoadmapEntries) {
+  statusCounts[entry.data.status] += 1;
+}
+---
+
+<Layout title={ROADMAP.TITLE} description={ROADMAP.DESCRIPTION}>
+  <section id="Roadmap" class="container mx-auto space-y-12 px-6 pt-18">
+    <div class="space-y-5">
+      <h2 class="heading text-5xl uppercase md:text-9xl">Roadmap</h2>
+      <p class="text-secondary max-w-3xl text-base md:text-lg">
+        Public plan for what I am actively shipping, what is queued next, and
+        what is already delivered.
+      </p>
+
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div
+          class="border-secondary/60 bg-primary/25 rounded-[1.5rem] border border-dashed p-4"
+        >
+          <p class="text-secondary text-xs tracking-[0.2em] uppercase">
+            In progress
+          </p>
+          <p class="heading mt-3 text-3xl">{statusCounts.doing}</p>
+        </div>
+        <div
+          class="border-secondary/60 bg-background/85 rounded-[1.5rem] border border-dashed p-4"
+        >
+          <p class="text-secondary text-xs tracking-[0.2em] uppercase">
+            Planned
+          </p>
+          <p class="heading mt-3 text-3xl">{statusCounts.todo}</p>
+        </div>
+        <div
+          class="border-secondary/60 bg-secondary/10 rounded-[1.5rem] border border-dashed p-4"
+        >
+          <p class="text-secondary text-xs tracking-[0.2em] uppercase">
+            Shipped
+          </p>
+          <p class="heading mt-3 text-3xl">{statusCounts.done}</p>
+        </div>
+      </div>
+    </div>
+
+    {
+      hasEntries ? (
+        <div class="space-y-10">
+          {groupedRoadmapEntries.map((group) => (
+            <section class="space-y-4">
+              <div class="flex items-center justify-between gap-4">
+                <h3 class="heading text-2xl uppercase md:text-4xl">
+                  {group.label}
+                </h3>
+                <span class="text-secondary text-sm tracking-[0.2em] uppercase">
+                  {group.entries.length}
+                </span>
+              </div>
+              <RoadmapEntryList entries={group.entries} />
+            </section>
+          ))}
+        </div>
+      ) : (
+        <EmptyCollectionState
+          eyebrow="Roadmap Empty"
+          title="No roadmap items yet"
+          description="Add Markdown entries to `src/content/roadmap` and this page will populate automatically."
+          href="/"
+          linkLabel="Back to home"
+        />
+      )
+    }
+  </section>
+</Layout>
