@@ -36,4 +36,15 @@ const projects = defineCollection({
   }),
 });
 
-export const collections = { blog, projects };
+const roadmap = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/roadmap" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    status: z.enum(["todo", "doing", "done"]),
+    priority: z.number().int().optional(),
+    date: z.coerce.date().optional(),
+  }),
+});
+
+export const collections = { blog, projects, roadmap };
