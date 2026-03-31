@@ -1,0 +1,67 @@
+---
+import FormattedDate from "@/components/FormattedDate.astro";
+import {
+  getRoadmapStatusClassName,
+  getRoadmapStatusLabel,
+  type RoadmapEntry,
+} from "@/utils/roadmap";
+
+interface Props {
+  entries: RoadmapEntry[];
+  compact?: boolean;
+  showDescription?: boolean;
+  showMeta?: boolean;
+}
+
+const {
+  entries,
+  compact = false,
+  showDescription = true,
+  showMeta = true,
+}: Props = Astro.props;
+---
+
+<ul class="not-prose flex flex-col gap-4">
+  {
+    entries.map((entry) => (
+      <li class="border-secondary/60 bg-background/85 space-y-4 rounded-[2rem] border border-dashed p-5 md:p-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div class="space-y-3">
+            <h3
+              class={`heading uppercase ${compact ? "text-xl" : "text-2xl md:text-3xl"}`}
+            >
+              {entry.data.title}
+            </h3>
+            {showDescription && (
+              <p
+                class={`text-secondary ${compact ? "line-clamp-2" : "max-w-3xl"}`}
+              >
+                {entry.data.description}
+              </p>
+            )}
+            {showMeta && (
+              <div class="text-secondary flex flex-wrap items-center gap-2 text-xs tracking-[0.2em] uppercase">
+                {entry.data.priority !== undefined && (
+                  <span class="border-secondary/40 rounded-full border border-dashed px-3 py-1">
+                    Priority {entry.data.priority}
+                  </span>
+                )}
+                {entry.data.date && (
+                  <span class="border-secondary/40 rounded-full border border-dashed px-3 py-1">
+                    <FormattedDate date={entry.data.date} />
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          <span
+            class={`inline-flex items-center rounded-full border border-dashed px-3 py-1 text-xs tracking-[0.2em] uppercase ${getRoadmapStatusClassName(entry.data.status)}`}
+          >
+            {getRoadmapStatusLabel(entry.data.status)}
+          </span>
+        </div>
+      </li>
+    ))
+  }
+</ul>
