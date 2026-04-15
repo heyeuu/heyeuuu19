@@ -59,12 +59,6 @@ export const PROJECTS = {
     "A collection of my projects with links to repositories and live demos.",
 };
 
-export const ROADMAP = {
-  TITLE: "Roadmap",
-  DESCRIPTION:
-    "A public plan of what I am building now, what is next, and what has shipped.",
-};
-
 export const SOCIALS = [
   {
     NAME: "Email",
