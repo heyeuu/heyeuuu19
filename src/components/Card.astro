@@ -13,7 +13,8 @@ const blogEntry =
 ---
 
 <script>
-  const cursorClickFeedbackDurationMs = 160;
+  const cursorPressPreviewDurationMs = 120;
+  const cursorNavigationDelayMs = 220;
 
   document.querySelectorAll<HTMLAnchorElement>(".card-link").forEach((card) => {
     const supportsHoverCursor = window.matchMedia(
@@ -44,6 +45,7 @@ const blogEntry =
     let currentX: number = 0;
     let currentY: number = 0;
     let isHovering: boolean = false;
+    let isNavigating: boolean = false;
     let animationFrameId: number | null = null;
     let resetCursorTimerId: number | null = null;
 
@@ -64,7 +66,7 @@ const blogEntry =
       }
     }
 
-    function setClickState(): void {
+    function setClickState(shouldPersist = false): void {
       if (!cursorHoverImage || !cursorClickImage) {
         return;
       }
@@ -72,9 +74,14 @@ const blogEntry =
       clearResetTimer();
       cursorHoverImage.style.opacity = "0";
       cursorClickImage.style.opacity = "1";
-      resetCursorTimerId = window.setTimeout(() => {
-        setHoverState();
-      }, cursorClickFeedbackDurationMs);
+
+      if (!shouldPersist) {
+        resetCursorTimerId = window.setTimeout(() => {
+          if (!isNavigating) {
+            setHoverState();
+          }
+        }, cursorPressPreviewDurationMs);
+      }
     }
 
     card.addEventListener("mouseenter", (e: MouseEvent) => {
@@ -101,9 +108,13 @@ const blogEntry =
 
     card.addEventListener("mouseleave", () => {
       isHovering = false;
-      cursorCircle.style.opacity = "0";
+      if (!isNavigating) {
+        cursorCircle.style.opacity = "0";
+      }
       clearResetTimer();
-      setHoverState();
+      if (!isNavigating) {
+        setHoverState();
+      }
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
@@ -113,6 +124,20 @@ const blogEntry =
     card.addEventListener("pointerdown", (e: PointerEvent) => {
       if (e.pointerType === "mouse" && e.button === 0) {
         setClickState();
+      }
+    });
+
+    card.addEventListener("pointerup", (e: PointerEvent) => {
+      if (e.pointerType === "mouse" && e.button === 0 && !isNavigating) {
+        clearResetTimer();
+        setHoverState();
+      }
+    });
+
+    card.addEventListener("pointercancel", () => {
+      if (!isNavigating) {
+        clearResetTimer();
+        setHoverState();
       }
     });
 
@@ -126,10 +151,14 @@ const blogEntry =
       }
 
       e.preventDefault();
+      isNavigating = true;
+      clearResetTimer();
+      setClickState(true);
+      cursorCircle.style.opacity = "1";
 
       window.setTimeout(() => {
-        window.location.href = card.href;
-      }, cursorClickFeedbackDurationMs);
+        window.location.assign(card.href);
+      }, cursorNavigationDelayMs);
     });
 
     function animateCursor(): void {
@@ -162,7 +191,7 @@ const blogEntry =
         alt=""
         width="400"
         height="283"
-        class="col-start-1 row-start-1 block h-auto w-full object-contain transition-opacity duration-100 ease-out select-none"
+        class="col-start-1 row-start-1 block h-auto w-full object-contain transition-opacity duration-75 ease-out select-none"
         draggable="false"
       />
       <img
@@ -171,25 +200,7 @@ const blogEntry =
         alt=""
         width="400"
         height="331"
-        class="col-start-1 row-start-1 block h-auto w-full object-contain opacity-0 transition-opacity duration-100 ease-out select-none"
-        draggable="false"
-      />
-      <img
-        data-cursor-hover-image
-        src="/fly_0.webp"
-        alt=""
-        width="400"
-        height="283"
-        class="col-start-1 row-start-1 block h-auto w-full object-contain transition-opacity duration-100 ease-out select-none"
-        draggable="false"
-      />
-      <img
-        data-cursor-click-image
-        src="/fly_1.webp"
-        alt=""
-        width="400"
-        height="331"
-        class="col-start-1 row-start-1 block h-auto w-full object-contain opacity-0 transition-opacity duration-100 ease-out select-none"
+        class="col-start-1 row-start-1 block h-auto w-full object-contain opacity-0 transition-opacity duration-75 ease-out select-none"
         draggable="false"
       />
     </div>
