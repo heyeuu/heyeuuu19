@@ -14,27 +14,66 @@ const blogEntry =
 
 <script>
   document
-    .querySelectorAll<HTMLElement>(".card-link")
-    .forEach((card: HTMLElement) => {
-      const cardElement: HTMLElement = card;
-      const circle = cardElement.querySelector(
+    .querySelectorAll<HTMLAnchorElement>(".card-link")
+    .forEach((card) => {
+      const supportsHoverCursor = window.matchMedia(
+        "(hover: hover) and (pointer: fine)",
+      ).matches;
+
+      if (!supportsHoverCursor) {
+        return;
+      }
+
+      const circle = card.querySelector(
         "[data-cursor-circle]",
       ) as HTMLElement | null;
+      const image = card.querySelector(
+        "[data-cursor-image]",
+      ) as HTMLImageElement | null;
 
-      if (!circle) {
+      if (!circle || !image) {
         return;
       }
 
       const cursorCircle: HTMLElement = circle;
+      const cursorImage: HTMLImageElement = image;
+      const hoverImageSrc = cursorImage.dataset.hoverSrc;
+      const clickImageSrc = cursorImage.dataset.clickSrc;
       let targetX: number = 0;
       let targetY: number = 0;
       let currentX: number = 0;
       let currentY: number = 0;
       let isHovering: boolean = false;
       let animationFrameId: number | null = null;
+      let resetCursorTimerId: number | null = null;
 
-      cardElement.addEventListener("mouseenter", (e: MouseEvent) => {
-        const rect: DOMRect = cardElement.getBoundingClientRect();
+      function clearResetTimer(): void {
+        if (resetCursorTimerId) {
+          window.clearTimeout(resetCursorTimerId);
+          resetCursorTimerId = null;
+        }
+      }
+
+      function setHoverState(): void {
+        if (hoverImageSrc) {
+          cursorImage.src = hoverImageSrc;
+        }
+      }
+
+      function setClickState(): void {
+        if (!clickImageSrc) {
+          return;
+        }
+
+        clearResetTimer();
+        cursorImage.src = clickImageSrc;
+        resetCursorTimerId = window.setTimeout(() => {
+          setHoverState();
+        }, 160);
+      }
+
+      card.addEventListener("mouseenter", (e: MouseEvent) => {
+        const rect: DOMRect = card.getBoundingClientRect();
         targetX = e.clientX - rect.left;
         targetY = e.clientY - rect.top;
         currentX = targetX;
@@ -42,25 +81,54 @@ const blogEntry =
         cursorCircle.style.left = `${currentX}px`;
         cursorCircle.style.top = `${currentY}px`;
         cursorCircle.style.opacity = "1";
+        setHoverState();
         isHovering = true;
         if (!animationFrameId) {
           animateCursor();
         }
       });
 
-      cardElement.addEventListener("mousemove", (e: MouseEvent) => {
-        const rect: DOMRect = cardElement.getBoundingClientRect();
+      card.addEventListener("mousemove", (e: MouseEvent) => {
+        const rect: DOMRect = card.getBoundingClientRect();
         targetX = e.clientX - rect.left;
         targetY = e.clientY - rect.top;
       });
 
-      cardElement.addEventListener("mouseleave", () => {
+      card.addEventListener("mouseleave", () => {
         isHovering = false;
         cursorCircle.style.opacity = "0";
+        clearResetTimer();
+        setHoverState();
         if (animationFrameId) {
           cancelAnimationFrame(animationFrameId);
           animationFrameId = null;
         }
+      });
+
+      card.addEventListener("pointerdown", (e: PointerEvent) => {
+        if (e.pointerType === "mouse" && e.button === 0) {
+          setClickState();
+        }
+      });
+
+      card.addEventListener("click", (e: MouseEvent) => {
+        const isPrimaryClick =
+          e.button === 0 &&
+          !e.metaKey &&
+          !e.ctrlKey &&
+          !e.shiftKey &&
+          !e.altKey;
+        const opensNewContext = card.target !== "" && card.target !== "_self";
+
+        if (!isPrimaryClick || opensNewContext) {
+          return;
+        }
+
+        e.preventDefault();
+
+        window.setTimeout(() => {
+          window.location.href = card.href;
+        }, 160);
       });
 
       function animateCursor(): void {
@@ -84,21 +152,20 @@ const blogEntry =
   >
     <div
       data-cursor-circle
-      class="border-secondary bg-primary pointer-events-none absolute hidden h-[75px] w-[75px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-dashed group-hover:grid"
+      class="pointer-events-none absolute top-0 left-0 z-20 hidden w-[110px] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 ease-out group-hover:block sm:w-[130px] md:w-[150px]"
+      aria-hidden="true"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        class="text-accent h-10 w-10"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M7 7h10v10"></path>
-        <path d="M7 17 17 7"></path>
-      </svg>
+      <img
+        data-cursor-image
+        data-hover-src="/fly_0.png"
+        data-click-src="/fly_1.png"
+        src="/fly_0.png"
+        alt=""
+        width="1824"
+        height="2344"
+        class="block h-auto w-full object-contain select-none"
+        draggable="false"
+      />
     </div>
 
     <div
