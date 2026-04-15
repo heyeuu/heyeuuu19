@@ -15,7 +15,7 @@ const blogEntry =
 <script>
   document
     .querySelectorAll<HTMLAnchorElement>(".card-link")
-    .forEach((card: HTMLAnchorElement) => {
+    .forEach((card) => {
       const supportsHoverCursor = window.matchMedia(
         "(hover: hover) and (pointer: fine)",
       ).matches;
@@ -24,11 +24,10 @@ const blogEntry =
         return;
       }
 
-      const cardElement: HTMLAnchorElement = card;
-      const circle = cardElement.querySelector(
+      const circle = card.querySelector(
         "[data-cursor-circle]",
       ) as HTMLElement | null;
-      const image = cardElement.querySelector(
+      const image = card.querySelector(
         "[data-cursor-image]",
       ) as HTMLImageElement | null;
 
@@ -77,8 +76,8 @@ const blogEntry =
         }, 160);
       }
 
-      cardElement.addEventListener("mouseenter", (e: MouseEvent) => {
-        const rect: DOMRect = cardElement.getBoundingClientRect();
+      card.addEventListener("mouseenter", (e: MouseEvent) => {
+        const rect: DOMRect = card.getBoundingClientRect();
         targetX = e.clientX - rect.left;
         targetY = e.clientY - rect.top;
         currentX = targetX;
@@ -113,31 +112,29 @@ const blogEntry =
         }
       });
 
-      cardElement.addEventListener("pointerdown", (e: PointerEvent) => {
+      card.addEventListener("pointerdown", (e: PointerEvent) => {
         if (e.pointerType === "mouse" && e.button === 0) {
           setClickState();
         }
       });
 
-      cardElement.addEventListener("click", (e: MouseEvent) => {
+      card.addEventListener("click", (e: MouseEvent) => {
         const isPrimaryClick =
           e.button === 0 &&
           !e.metaKey &&
           !e.ctrlKey &&
           !e.shiftKey &&
           !e.altKey;
-        const opensNewContext =
-          cardElement.target !== "" && cardElement.target !== "_self";
+        const opensNewContext = card.target !== "" && card.target !== "_self";
 
         if (!isPrimaryClick || opensNewContext) {
           return;
         }
 
         e.preventDefault();
-        setClickState();
 
         window.setTimeout(() => {
-          window.location.href = cardElement.href;
+          window.location.href = card.href;
         }, 160);
       });
 
