@@ -15,7 +15,7 @@ const blogEntry =
 <script>
   document
     .querySelectorAll<HTMLAnchorElement>(".card-link")
-    .forEach((card) => {
+    .forEach((card: HTMLAnchorElement) => {
       const supportsHoverCursor = window.matchMedia(
         "(hover: hover) and (pointer: fine)",
       ).matches;
@@ -24,18 +24,23 @@ const blogEntry =
         return;
       }
 
-      const circle = card.querySelector(
+      const cardElement: HTMLAnchorElement = card;
+      const circle = cardElement.querySelector(
         "[data-cursor-circle]",
       ) as HTMLElement | null;
-      const image = card.querySelector(
+      const image = cardElement.querySelector(
         "[data-cursor-image]",
       ) as HTMLImageElement | null;
 
+      if (!circle || !image) {
       if (!circle || !image) {
         return;
       }
 
       const cursorCircle: HTMLElement = circle;
+      const cursorImage: HTMLImageElement = image;
+      const hoverImageSrc = cursorImage.dataset.hoverSrc;
+      const clickImageSrc = cursorImage.dataset.clickSrc;
       const cursorImage: HTMLImageElement = image;
       const hoverImageSrc = cursorImage.dataset.hoverSrc;
       const clickImageSrc = cursorImage.dataset.clickSrc;
@@ -72,8 +77,8 @@ const blogEntry =
         }, 160);
       }
 
-      card.addEventListener("mouseenter", (e: MouseEvent) => {
-        const rect: DOMRect = card.getBoundingClientRect();
+      cardElement.addEventListener("mouseenter", (e: MouseEvent) => {
+        const rect: DOMRect = cardElement.getBoundingClientRect();
         targetX = e.clientX - rect.left;
         targetY = e.clientY - rect.top;
         currentX = targetX;
@@ -81,6 +86,7 @@ const blogEntry =
         cursorCircle.style.left = `${currentX}px`;
         cursorCircle.style.top = `${currentY}px`;
         cursorCircle.style.opacity = "1";
+        setHoverState();
         setHoverState();
         isHovering = true;
         if (!animationFrameId) {
@@ -99,35 +105,39 @@ const blogEntry =
         cursorCircle.style.opacity = "0";
         clearResetTimer();
         setHoverState();
+        clearResetTimer();
+        setHoverState();
         if (animationFrameId) {
           cancelAnimationFrame(animationFrameId);
           animationFrameId = null;
         }
       });
 
-      card.addEventListener("pointerdown", (e: PointerEvent) => {
+      cardElement.addEventListener("pointerdown", (e: PointerEvent) => {
         if (e.pointerType === "mouse" && e.button === 0) {
           setClickState();
         }
       });
 
-      card.addEventListener("click", (e: MouseEvent) => {
+      cardElement.addEventListener("click", (e: MouseEvent) => {
         const isPrimaryClick =
           e.button === 0 &&
           !e.metaKey &&
           !e.ctrlKey &&
           !e.shiftKey &&
           !e.altKey;
-        const opensNewContext = card.target !== "" && card.target !== "_self";
+        const opensNewContext =
+          cardElement.target !== "" && cardElement.target !== "_self";
 
         if (!isPrimaryClick || opensNewContext) {
           return;
         }
 
         e.preventDefault();
+        setClickState();
 
         window.setTimeout(() => {
-          window.location.href = card.href;
+          window.location.href = cardElement.href;
         }, 160);
       });
 
@@ -154,7 +164,20 @@ const blogEntry =
       data-cursor-circle
       class="pointer-events-none absolute top-0 left-0 z-20 hidden w-[110px] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 ease-out group-hover:block sm:w-[130px] md:w-[150px]"
       aria-hidden="true"
+      class="pointer-events-none absolute top-0 left-0 z-20 hidden w-[110px] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 ease-out group-hover:block sm:w-[130px] md:w-[150px]"
+      aria-hidden="true"
     >
+      <img
+        data-cursor-image
+        data-hover-src="/fly_0.png"
+        data-click-src="/fly_1.png"
+        src="/fly_0.png"
+        alt=""
+        width="1824"
+        height="2344"
+        class="block h-auto w-full object-contain select-none"
+        draggable="false"
+      />
       <img
         data-cursor-image
         data-hover-src="/fly_0.png"
