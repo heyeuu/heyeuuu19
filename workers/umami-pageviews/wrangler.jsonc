@@ -1,0 +1,9 @@
+{
+  "name": "umami-pageviews",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-18",
+  "vars": {
+    "CACHE_TTL_SECONDS": "300",
+    "UMAMI_API_ENDPOINT": "https://api.umami.is/v1",
+  },
+}

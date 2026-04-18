@@ -2,6 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import MetadataPills from "@/components/blog/MetadataPills.astro";
+import PostPageviews from "@/components/blog/PostPageviews.astro";
 import SeriesPosts from "@/components/blog/SeriesPosts.astro";
 import FormattedDate from "@/components/FormattedDate.astro";
 import {
@@ -77,6 +78,7 @@ const { Content } = await render(post);
             <FormattedDate date={post.data.date} />
           </p>
           <MetadataPills tags={post.data.tags} series={post.data.series} />
+          <PostPageviews postId={post.id} />
         </div>
       </div>
 
