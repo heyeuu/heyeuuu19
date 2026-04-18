@@ -23,9 +23,13 @@ The Worker only serves pageviews for routes under the allowed prefixes declared 
 Deploy the Worker with these secrets:
 
 ```bash
-bunx wrangler secret put UMAMI_API_KEY
 bunx wrangler secret put UMAMI_WEBSITE_ID
 ```
+
+Then configure one authentication method:
+
+- Umami Cloud: `bunx wrangler secret put UMAMI_API_KEY`
+- Self-hosted Umami: `bunx wrangler secret put UMAMI_BEARER_TOKEN`
 
 `UMAMI_WEBSITE_ID` is not sensitive, but keeping it in Wrangler secrets keeps setup simple.
 
@@ -33,7 +37,7 @@ bunx wrangler secret put UMAMI_WEBSITE_ID
 
 Set these in `wrangler.jsonc` or with `wrangler secret put` if you prefer:
 
-- `UMAMI_API_ENDPOINT`: Defaults to `https://api.umami.is/v1`
+- `UMAMI_API_ENDPOINT`: Defaults to `https://api.umami.is/v1`. For self-hosted Umami, set this to your instance API base such as `https://analytics.example.com/api`.
 - `CACHE_TTL_SECONDS`: Defaults to `300`
 - `ALLOWED_ORIGIN`: Optional CORS origin. If omitted, the endpoint is public with `*`
 

@@ -10,6 +10,7 @@ interface Env {
   CACHE_TTL_SECONDS?: string;
   UMAMI_API_ENDPOINT?: string;
   UMAMI_API_KEY?: string;
+  UMAMI_BEARER_TOKEN?: string;
   UMAMI_WEBSITE_ID?: string;
 }
 
@@ -17,8 +18,13 @@ interface ExecutionContextLike {
   waitUntil(promise: Promise<unknown>): void;
 }
 
+interface UmamiMetricValue {
+  prev?: number;
+  value?: number;
+}
+
 interface UmamiStatsResponse {
-  pageviews?: number;
+  pageviews?: number | UmamiMetricValue | null;
 }
 
 interface PageviewsResponse {
@@ -99,11 +105,15 @@ export default {
     }
 
     const apiKey = env.UMAMI_API_KEY;
+    const bearerToken = env.UMAMI_BEARER_TOKEN;
     const websiteId = env.UMAMI_WEBSITE_ID;
 
-    if (!apiKey || !websiteId) {
+    if ((!apiKey && !bearerToken) || !websiteId) {
       return json(
-        { error: "Worker is missing Umami credentials." },
+        {
+          error:
+            "Worker is missing Umami credentials. Configure UMAMI_API_KEY or UMAMI_BEARER_TOKEN, plus UMAMI_WEBSITE_ID.",
+        },
         500,
         withDefaultHeaders(corsHeaders),
       );
@@ -124,6 +134,7 @@ export default {
       const endpoint = env.UMAMI_API_ENDPOINT ?? DEFAULT_API_ENDPOINT;
       const pageviews = await getPageviews({
         apiKey,
+        bearerToken,
         endpoint,
         path: normalizedPath,
         websiteId,
@@ -156,17 +167,19 @@ export default {
 };
 
 async function getPageviews(input: {
-  apiKey: string;
+  apiKey?: string;
+  bearerToken?: string;
   endpoint: string;
   path: string;
   websiteId: string;
 }): Promise<number> {
-  const { apiKey, endpoint, path, websiteId } = input;
+  const { apiKey, bearerToken, endpoint, path, websiteId } = input;
   const variants = getPathVariants(path);
   const responses = await Promise.all(
     variants.map((variant) =>
       fetchStats({
         apiKey,
+        bearerToken,
         endpoint,
         path: variant,
         websiteId,
@@ -174,16 +187,20 @@ async function getPageviews(input: {
     ),
   );
 
-  return responses.reduce((total, stats) => total + (stats.pageviews ?? 0), 0);
+  return responses.reduce(
+    (total, stats) => total + getUmamiMetricValue(stats.pageviews),
+    0,
+  );
 }
 
 async function fetchStats(input: {
-  apiKey: string;
+  apiKey?: string;
+  bearerToken?: string;
   endpoint: string;
   path: string;
   websiteId: string;
 }): Promise<UmamiStatsResponse> {
-  const { apiKey, endpoint, path, websiteId } = input;
+  const { apiKey, bearerToken, endpoint, path, websiteId } = input;
   const url = new URL(
     `websites/${websiteId}/stats`,
     ensureTrailingSlash(endpoint),
@@ -192,12 +209,13 @@ async function fetchStats(input: {
   url.searchParams.set("startAt", String(ALL_TIME_START_MS));
   url.searchParams.set("endAt", String(Date.now()));
   url.searchParams.set("path", path);
+  url.searchParams.set("url", path);
 
   const response = await fetch(url.toString(), {
-    headers: {
-      Accept: "application/json",
-      "x-umami-api-key": apiKey,
-    },
+    headers: getUmamiHeaders({
+      apiKey,
+      bearerToken,
+    }),
   });
 
   if (!response.ok) {
@@ -209,6 +227,39 @@ async function fetchStats(input: {
   }
 
   return (await response.json()) as UmamiStatsResponse;
+}
+
+function getUmamiMetricValue(metric: UmamiStatsResponse["pageviews"]): number {
+  if (typeof metric === "number") {
+    return Number.isFinite(metric) ? metric : 0;
+  }
+
+  if (!metric || typeof metric !== "object") {
+    return 0;
+  }
+
+  const { value } = metric;
+
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function getUmamiHeaders(input: {
+  apiKey?: string;
+  bearerToken?: string;
+}): HeadersInit {
+  const headers = new Headers({
+    Accept: "application/json",
+  });
+
+  if (input.apiKey) {
+    headers.set("x-umami-api-key", input.apiKey);
+  }
+
+  if (input.bearerToken) {
+    headers.set("Authorization", `Bearer ${input.bearerToken}`);
+  }
+
+  return headers;
 }
 
 function normalizePath(pathname: string | null): string | null {

@@ -1,5 +1,22 @@
 const pageviewsRoots = document.querySelectorAll("[data-pageviews-root]");
 
+function getPageviewsValue(metric) {
+  if (typeof metric === "number" && Number.isFinite(metric)) {
+    return metric;
+  }
+
+  if (
+    metric &&
+    typeof metric === "object" &&
+    typeof metric.value === "number" &&
+    Number.isFinite(metric.value)
+  ) {
+    return metric.value;
+  }
+
+  return 0;
+}
+
 async function loadPageviews(root) {
   if (
     !(root instanceof HTMLElement) ||
@@ -25,11 +42,15 @@ async function loadPageviews(root) {
     });
 
     if (!response.ok) {
-      throw new Error(`Unexpected response: ${response.status}`);
+      const details = await response.text();
+
+      throw new Error(
+        `Unexpected response: ${response.status}${details ? ` ${details}` : ""}`,
+      );
     }
 
     const data = await response.json();
-    const pageviews = Number(data.pageviews ?? 0);
+    const pageviews = getPageviewsValue(data.pageviews);
 
     value.textContent = new Intl.NumberFormat().format(pageviews);
   } catch (error) {
