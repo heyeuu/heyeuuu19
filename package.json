@@ -8,6 +8,7 @@
     "build:force": "astro build --force",
     "preview": "astro preview",
     "astro": "astro",
+    "pageviews:sync": "bun ./scripts/pageviews/sync.ts",
     "content": "bun ./scripts/content/index.ts",
     "content:new": "bun ./scripts/content/index.ts new",
     "content:check": "bun ./scripts/content/index.ts check",

@@ -10,7 +10,6 @@ async function loadPageviews(root) {
 
   const value = root.querySelector("[data-pageviews-value]");
   const apiUrl = root.dataset.apiUrl;
-  const fallbackPath = root.dataset.fallbackPath;
 
   if (!(value instanceof HTMLElement) || !apiUrl) {
     return;
@@ -19,10 +18,7 @@ async function loadPageviews(root) {
   root.dataset.pageviewsLoaded = "true";
 
   try {
-    const path = window.location.pathname || fallbackPath;
-    const requestUrl = new URL(apiUrl);
-
-    requestUrl.searchParams.set("path", path || "/");
+    const requestUrl = new URL(apiUrl, window.location.origin);
 
     const response = await fetch(requestUrl.toString(), {
       headers: { Accept: "application/json" },

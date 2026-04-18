@@ -1,4 +1,7 @@
+import { ALLOWED_PAGEVIEW_PATH_PREFIXES } from "./allowed-paths.generated";
+
 const ALL_TIME_START_MS = Date.UTC(2000, 0, 1);
+const API_ROUTE_PREFIX = "/api/pageviews";
 const DEFAULT_API_ENDPOINT = "https://api.umami.is/v1";
 const DEFAULT_CACHE_TTL_SECONDS = 300;
 
@@ -55,7 +58,7 @@ export default {
     if (url.pathname === "/") {
       return json(
         {
-          endpoints: ["GET /api/pageviews?path=/blog/your-post"],
+          endpoints: ["GET /api/pageviews/blog/your-post"],
           name: "umami-pageviews",
         },
         200,
@@ -63,7 +66,23 @@ export default {
       );
     }
 
-    if (url.pathname !== "/api/pageviews") {
+    if (
+      url.pathname === API_ROUTE_PREFIX ||
+      url.pathname === `${API_ROUTE_PREFIX}/`
+    ) {
+      return json(
+        {
+          error:
+            "Request a published page resource at /api/pageviews/<path>, for example /api/pageviews/blog/your-post.",
+        },
+        400,
+        withDefaultHeaders(corsHeaders),
+      );
+    }
+
+    const normalizedPath = getRequestedPagePath(url.pathname);
+
+    if (!normalizedPath) {
       return json(
         { error: "Not found." },
         404,
@@ -71,12 +90,10 @@ export default {
       );
     }
 
-    const normalizedPath = normalizePath(url.searchParams.get("path"));
-
-    if (!normalizedPath) {
+    if (!isAllowedPagePath(normalizedPath)) {
       return json(
-        { error: "A valid path query parameter is required." },
-        400,
+        { error: "Not found." },
+        404,
         withDefaultHeaders(corsHeaders),
       );
     }
@@ -92,7 +109,10 @@ export default {
       );
     }
 
-    const cacheKey = new Request(url.toString(), request);
+    const cacheKey = new Request(
+      getCacheUrl(url, normalizedPath).toString(),
+      request,
+    );
     const cache = (caches as CloudflareCacheStorage).default;
     const cachedResponse = await cache.match(cacheKey);
 
@@ -228,6 +248,47 @@ function normalizePath(pathname: string | null): string | null {
   return trimmed.replace(/\/+$/, "");
 }
 
+function getRequestedPagePath(requestPathname: string): string | null {
+  if (!requestPathname.startsWith(`${API_ROUTE_PREFIX}/`)) {
+    return null;
+  }
+
+  const encodedPath = requestPathname.slice(API_ROUTE_PREFIX.length);
+  const decodedPath = decodePathSegments(encodedPath);
+
+  if (!decodedPath) {
+    return null;
+  }
+
+  return normalizePath(decodedPath);
+}
+
+function decodePathSegments(pathname: string): string | null {
+  const segments = pathname.split("/");
+  const decodedSegments: string[] = [];
+
+  for (const segment of segments) {
+    if (!segment) {
+      decodedSegments.push(segment);
+      continue;
+    }
+
+    try {
+      const decoded = decodeURIComponent(segment);
+
+      if (decoded.includes("/")) {
+        return null;
+      }
+
+      decodedSegments.push(decoded);
+    } catch {
+      return null;
+    }
+  }
+
+  return decodedSegments.join("/");
+}
+
 function getPathVariants(pathname: string): string[] {
   if (pathname === "/") {
     return ["/"];
@@ -236,6 +297,20 @@ function getPathVariants(pathname: string): string[] {
   const variants = [pathname, `${pathname}/`];
 
   return Array.from(new Set(variants));
+}
+
+function getCacheUrl(url: URL, normalizedPath: string): URL {
+  const cacheUrl = new URL(url.origin);
+
+  cacheUrl.pathname = `${API_ROUTE_PREFIX}${normalizedPath}`;
+
+  return cacheUrl;
+}
+
+function isAllowedPagePath(pathname: string): boolean {
+  return ALLOWED_PAGEVIEW_PATH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
 }
 
 function getCorsHeaders(env: Env): HeadersInit {

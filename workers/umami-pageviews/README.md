@@ -4,7 +4,7 @@ This Worker exposes a small public endpoint for page-level Umami pageviews.
 
 ## Endpoint
 
-`GET /api/pageviews?path=/blog/your-post`
+`GET /api/pageviews/blog/your-post`
 
 Response example:
 
@@ -16,7 +16,7 @@ Response example:
 }
 ```
 
-The Worker merges `/blog/post` and `/blog/post/` so pageviews do not get split by trailing slash differences.
+The Worker only serves pageviews for routes under the allowed prefixes declared in `src/allowed-paths.generated.ts`, currently `/blog` and `/projects`. Requests outside those prefixes return `404`. It also merges `/blog/post` and `/blog/post/` so pageviews do not get split by trailing slash differences.
 
 ## Required secrets
 
@@ -39,7 +39,13 @@ Set these in `wrangler.jsonc` or with `wrangler secret put` if you prefer:
 
 ## Deploy
 
-From this directory:
+From the repo root, regenerate the allowed path prefixes before deploying the Worker if you changed that list:
+
+```bash
+bun run pageviews:sync
+```
+
+Then deploy from this directory:
 
 ```bash
 bunx wrangler deploy
@@ -51,8 +57,10 @@ For local development:
 bunx wrangler dev
 ```
 
-Then set `PUBLIC_UMAMI_STATS_API_URL` in the Astro app to your deployed endpoint, for example:
+Then set `PUBLIC_UMAMI_STATS_API_URL` in the Astro app to the pageviews API base URL. It can be an absolute URL or a site-relative path if the endpoint is served from the same origin. The blog post component will append the published page path automatically. For example:
 
 ```env
 PUBLIC_UMAMI_STATS_API_URL="https://umami-pageviews.your-subdomain.workers.dev/api/pageviews"
+# Or, when the worker is routed through the same site origin:
+PUBLIC_UMAMI_STATS_API_URL="/api/pageviews"
 ```
