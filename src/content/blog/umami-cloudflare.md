@@ -293,7 +293,7 @@ function getUmamiMetricValue(metric) {
 
 写在项目根目录 `.env` 里：
 
-```env
+```dotenv
 PUBLIC_UMAMI_SCRIPT_URL="https://cloud.umami.is/script.js"
 PUBLIC_UMAMI_WEBSITE_ID="your-umami-website-id"
 PUBLIC_UMAMI_STATS_API_URL="https://your-worker.workers.dev/api/pageviews"
@@ -342,7 +342,7 @@ bunx wrangler secret put UMAMI_BEARER_TOKEN
 
 编辑根目录的 `.env`：
 
-```env
+```dotenv
 PUBLIC_UMAMI_SCRIPT_URL="https://cloud.umami.is/script.js"
 PUBLIC_UMAMI_WEBSITE_ID="你的-website-id"
 PUBLIC_UMAMI_STATS_API_URL="https://你的-worker.workers.dev/api/pageviews"
@@ -451,4 +451,3 @@ bun run build
 - Umami API 文档：<https://umami.is/docs/api>
 - Umami 自托管 API 认证：<https://docs.umami.is/docs/api/authentication>
 - Worker 说明文档：`workers/umami-pageviews/README.md`
-

@@ -63,7 +63,7 @@ bunx wrangler dev
 
 Then set `PUBLIC_UMAMI_STATS_API_URL` in the Astro app to the pageviews API base URL. It can be an absolute URL or a site-relative path if the endpoint is served from the same origin. The blog post component will append the published page path automatically. For example:
 
-```env
+```dotenv
 PUBLIC_UMAMI_STATS_API_URL="https://umami-pageviews.your-subdomain.workers.dev/api/pageviews"
 # Or, when the worker is routed through the same site origin:
 PUBLIC_UMAMI_STATS_API_URL="/api/pageviews"
