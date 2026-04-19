@@ -1,0 +1,47 @@
+---
+interface Props {
+  postId: string;
+}
+
+const { postId }: Props = Astro.props;
+const pageviewsApiBaseUrl = import.meta.env.PUBLIC_UMAMI_STATS_API_URL;
+const shouldRender = Boolean(pageviewsApiBaseUrl);
+const pagePath = `/blog/${postId}`;
+const pageviewsApiUrl = shouldRender
+  ? buildPageviewsApiUrl(pageviewsApiBaseUrl, pagePath)
+  : "";
+const elementId = `post-pageviews-${postId.replaceAll("/", "-")}`;
+
+function buildPageviewsApiUrl(apiBaseUrl: string, pathname: string) {
+  const normalizedBaseUrl = apiBaseUrl.replace(/\/+$/, "");
+  const encodedPath = pathname
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+
+  return `${normalizedBaseUrl}/${encodedPath}`;
+}
+---
+
+{
+  shouldRender && (
+    <div
+      id={elementId}
+      class="border-secondary/60 bg-background/90 inline-flex items-center gap-3 rounded-full border border-dashed px-4 py-2 text-sm"
+      data-api-url={pageviewsApiUrl}
+      data-pageviews-root
+    >
+      <span class="text-secondary tracking-[0.2em] uppercase">Views</span>
+      <span
+        class="heading text-base uppercase"
+        data-pageviews-value
+        aria-live="polite"
+      >
+        ...
+      </span>
+    </div>
+  )
+}
+
+{shouldRender && <script is:inline src="/scripts/post-pageviews.js" />}

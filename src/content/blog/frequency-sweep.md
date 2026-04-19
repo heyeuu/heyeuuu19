@@ -3,6 +3,11 @@ title: "控制工程 | 扫频Frequency Sweep"
 description: "扫频简述。"
 date: "2026-03-31"
 draft: false
+tags:
+  - 控制工程
+  - 频率响应
+  - 扫频
+series: "控制工程"
 image:
   url: "https://me19.heyeuuu19.com/blog/control/frequency_sweep.png"
   alt: "扫频封面图"
