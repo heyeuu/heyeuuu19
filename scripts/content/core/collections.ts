@@ -47,12 +47,11 @@ title: ${JSON.stringify(title)}
 description: "TODO: add a short summary."
 date: "${date}"
 draft: true
-# tags:
-#   - Example
-# series: "Example Series"
-# image:
-#   url: "/${slug}.webp"
-#   alt: "Describe the cover image"
+tags: []
+series: ""
+image:
+  url: "/${slug}.webp"
+  alt: "TODO: describe the cover image"
 ---
 
 ## Summary

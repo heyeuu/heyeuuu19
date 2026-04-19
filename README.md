@@ -22,13 +22,13 @@ bun run dev
 
 常用命令：
 
-| Command | Action |
-| :------ | :----- |
-| `bun run dev` | 启动本地开发服务器 |
-| `bun run build` | 构建静态站点到 `dist/` |
-| `bun run preview` | 本地预览构建结果 |
-| `bun run content:new` | 交互式新建 blog/project 内容 |
-| `bun run content:check` | 检查内容 frontmatter 和文件命名 |
+| Command                                                  | Action                             |
+| :------------------------------------------------------- | :--------------------------------- |
+| `bun run dev`                                            | 启动本地开发服务器                 |
+| `bun run build`                                          | 构建静态站点到 `dist/`             |
+| `bun run preview`                                        | 本地预览构建结果                   |
+| `bun run content:new`                                    | 交互式新建 blog/project 内容       |
+| `bun run content:check`                                  | 检查内容 frontmatter 和文件命名    |
 | `bun run content:patch -- --type blog --set draft=false` | 按 collection 批量修改 frontmatter |
 
 ## 内容工作流
@@ -60,6 +60,7 @@ bun run content:new -- --type projects --title "Form Builder" --slug form-builde
 - `slug` 不传时会自动从标题推导
 - 如果标题是纯中文或不适合自动转 slug，建议手动传 `--slug`
 - 默认生成 `.md` 文件；如需 MDX，可传 `--format mdx`
+- Blog 模板会直接生成 `tags: []`、`series: ""` 和 `image.url` / `image.alt` 的默认 frontmatter
 
 ### 检查内容
 
