@@ -272,7 +272,8 @@ bun run content:new -- --type projects --title "Form Builder" --slug form-builde
 模板行为：
 
 - Blog 模板默认 `draft: true`
-- 模板里会带 TODO 占位（`description`、正文段落、项目图 `alt` 等）
+- Blog 模板会直接带上 `tags: []`、`series: ""`、`image.url` 和 `image.alt` 的默认值
+- 模板里会带 TODO 占位（`description`、正文段落、封面图 `alt` 等）
 - 如果目录不存在，脚本会自动 `mkdir -p`
 
 ### 7.3 `check`（检查内容）
