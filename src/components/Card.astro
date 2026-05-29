@@ -108,20 +108,21 @@ const blogEntry =
     });
 
     card.addEventListener("click", (e: MouseEvent) => {
-      const isPrimaryClick =
-        e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
-      const opensNewContext = card.target !== "" && card.target !== "_self";
-      const shouldDelayNavigation = hasPrimaryMousePress && isPrimaryClick;
+      const shouldDelayNavigation =
+        hasPrimaryMousePress &&
+        e.button === 0 &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.shiftKey &&
+        !e.altKey &&
+        (card.target === "" || card.target === "_self");
 
-      hasPrimaryMousePress = false;
-
-      if (!shouldDelayNavigation || opensNewContext) {
-        if (!isNavigating) {
-          setPreviewState("hover");
-        }
+      if (!shouldDelayNavigation) {
+        resetPreviewState();
         return;
       }
 
+      hasPrimaryMousePress = false;
       e.preventDefault();
       isNavigating = true;
       setPreviewState("pressed");
