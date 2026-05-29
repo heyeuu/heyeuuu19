@@ -13,14 +13,14 @@ const blogEntry =
 ---
 
 <script>
-  const cursorPressPreviewDurationMs = 120;
   const cursorNavigationDelayMs = 220;
+  const supportsHoverCursor = window.matchMedia(
+    "(hover: hover) and (pointer: fine)",
+  ).matches;
+
+  type PreviewState = "hover" | "pressed";
 
   document.querySelectorAll<HTMLAnchorElement>(".card-link").forEach((card) => {
-    const supportsHoverCursor = window.matchMedia(
-      "(hover: hover) and (pointer: fine)",
-    ).matches;
-
     if (!supportsHoverCursor) {
       return;
     }
@@ -46,41 +46,18 @@ const blogEntry =
     let currentY: number = 0;
     let isHovering: boolean = false;
     let isNavigating: boolean = false;
+    let hasPrimaryMousePress: boolean = false;
     let animationFrameId: number | null = null;
-    let resetCursorTimerId: number | null = null;
 
-    function clearResetTimer(): void {
-      if (resetCursorTimerId) {
-        window.clearTimeout(resetCursorTimerId);
-        resetCursorTimerId = null;
-      }
+    function setPreviewState(state: PreviewState): void {
+      cursorCircle.dataset.previewState = state;
     }
 
-    function setHoverState(): void {
-      if (cursorHoverImage) {
-        cursorHoverImage.style.opacity = "1";
-      }
+    function resetPreviewState(): void {
+      hasPrimaryMousePress = false;
 
-      if (cursorClickImage) {
-        cursorClickImage.style.opacity = "0";
-      }
-    }
-
-    function setClickState(shouldPersist = false): void {
-      if (!cursorHoverImage || !cursorClickImage) {
-        return;
-      }
-
-      clearResetTimer();
-      cursorHoverImage.style.opacity = "0";
-      cursorClickImage.style.opacity = "1";
-
-      if (!shouldPersist) {
-        resetCursorTimerId = window.setTimeout(() => {
-          if (!isNavigating) {
-            setHoverState();
-          }
-        }, cursorPressPreviewDurationMs);
+      if (!isNavigating) {
+        setPreviewState("hover");
       }
     }
 
@@ -93,7 +70,7 @@ const blogEntry =
       cursorCircle.style.left = `${currentX}px`;
       cursorCircle.style.top = `${currentY}px`;
       cursorCircle.style.opacity = "1";
-      setHoverState();
+      setPreviewState(isNavigating ? "pressed" : "hover");
       isHovering = true;
       if (!animationFrameId) {
         animateCursor();
@@ -108,12 +85,10 @@ const blogEntry =
 
     card.addEventListener("mouseleave", () => {
       isHovering = false;
+      hasPrimaryMousePress = false;
       if (!isNavigating) {
         cursorCircle.style.opacity = "0";
-      }
-      clearResetTimer();
-      if (!isNavigating) {
-        setHoverState();
+        setPreviewState("hover");
       }
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
@@ -123,37 +98,33 @@ const blogEntry =
 
     card.addEventListener("pointerdown", (e: PointerEvent) => {
       if (e.pointerType === "mouse" && e.button === 0) {
-        setClickState();
-      }
-    });
-
-    card.addEventListener("pointerup", (e: PointerEvent) => {
-      if (e.pointerType === "mouse" && e.button === 0 && !isNavigating) {
-        clearResetTimer();
-        setHoverState();
+        hasPrimaryMousePress = true;
+        setPreviewState("pressed");
       }
     });
 
     card.addEventListener("pointercancel", () => {
-      if (!isNavigating) {
-        clearResetTimer();
-        setHoverState();
-      }
+      resetPreviewState();
     });
 
     card.addEventListener("click", (e: MouseEvent) => {
       const isPrimaryClick =
         e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
       const opensNewContext = card.target !== "" && card.target !== "_self";
+      const shouldDelayNavigation = hasPrimaryMousePress && isPrimaryClick;
 
-      if (!isPrimaryClick || opensNewContext) {
+      hasPrimaryMousePress = false;
+
+      if (!shouldDelayNavigation || opensNewContext) {
+        if (!isNavigating) {
+          setPreviewState("hover");
+        }
         return;
       }
 
       e.preventDefault();
       isNavigating = true;
-      clearResetTimer();
-      setClickState(true);
+      setPreviewState("pressed");
       cursorCircle.style.opacity = "1";
 
       window.setTimeout(() => {
@@ -182,6 +153,7 @@ const blogEntry =
   >
     <div
       data-cursor-circle
+      data-preview-state="hover"
       class="pointer-events-none absolute top-0 left-0 z-20 hidden w-[110px] -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 ease-out group-hover:grid sm:w-[130px] md:w-[150px]"
       aria-hidden="true"
     >
@@ -191,7 +163,7 @@ const blogEntry =
         alt=""
         width="400"
         height="283"
-        class="col-start-1 row-start-1 block h-auto w-full object-contain transition-opacity duration-75 ease-out select-none"
+        class="col-start-1 row-start-1 block h-auto w-full object-contain opacity-0 transition-opacity duration-75 ease-out select-none"
         draggable="false"
       />
       <img
@@ -240,3 +212,10 @@ const blogEntry =
     )
   }
 </li>
+
+<style>
+  [data-preview-state="hover"] [data-cursor-hover-image],
+  [data-preview-state="pressed"] [data-cursor-click-image] {
+    opacity: 1;
+  }
+</style>
