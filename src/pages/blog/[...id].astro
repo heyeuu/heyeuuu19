@@ -1,10 +1,16 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
+import TableOfContents from "@/components/TableOfContents.astro";
+import TableOfContentsObserver from "@/components/TableOfContentsObserver.astro";
 import MetadataPills from "@/components/blog/MetadataPills.astro";
 import PostPageviews from "@/components/blog/PostPageviews.astro";
 import SeriesPosts from "@/components/blog/SeriesPosts.astro";
 import FormattedDate from "@/components/FormattedDate.astro";
+import {
+  getTableOfContentsHeadings,
+  shouldRenderTableOfContents,
+} from "@/utils/table-of-contents";
 import {
   getPublishedBlogPosts,
   getSeriesPosts,
@@ -47,7 +53,9 @@ const relatedPosts = sortBlogPosts(
   }),
 ).slice(0, 3);
 
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
+const tocHeadings = getTableOfContentsHeadings(headings);
+const hasTableOfContents = shouldRenderTableOfContents(tocHeadings);
 ---
 
 <Layout title={post.data.title} description={post.data.description}>
@@ -106,9 +114,33 @@ const { Content } = await render(post);
         </a>
       </div>
     </div>
-    <article class="mx-auto flex-2 px-3">
-      <Content />
-    </article>
+    {
+      hasTableOfContents && (
+        <TableOfContents headings={tocHeadings} collapsible />
+      )
+    }
+    {hasTableOfContents && <TableOfContentsObserver />}
+
+    <div
+      class:list={[
+        "grid gap-10",
+        hasTableOfContents && "xl:grid-cols-[minmax(0,1fr)_18rem]",
+      ]}
+    >
+      <article class="mx-auto min-w-0 px-3">
+        <Content />
+      </article>
+
+      {
+        hasTableOfContents && (
+          <aside class="hidden xl:block xl:self-stretch">
+            <div class="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto">
+              <TableOfContents headings={tocHeadings} />
+            </div>
+          </aside>
+        )
+      }
+    </div>
 
     <section class="space-y-6">
       <section

@@ -1,0 +1,129 @@
+<script>
+  const headingSelector = "article :is(h2, h3)[id]";
+  const linkSelector = "[data-toc-link]";
+  const fallbackOffset = 160;
+
+  const getHashSlug = () => {
+    try {
+      return decodeURIComponent(window.location.hash.slice(1));
+    } catch {
+      return window.location.hash.slice(1);
+    }
+  };
+
+  const setLinkState = (links: HTMLAnchorElement[], active: boolean) => {
+    for (const link of links) {
+      link.dataset.active = String(active);
+
+      if (active) {
+        link.setAttribute("aria-current", "location");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    }
+  };
+
+  const initTableOfContentsObserver = () => {
+    const headings = Array.from(
+      document.querySelectorAll<HTMLHeadingElement>(headingSelector),
+    );
+    const links = Array.from(
+      document.querySelectorAll<HTMLAnchorElement>(linkSelector),
+    );
+
+    if (headings.length < 2 || links.length === 0) {
+      return;
+    }
+
+    const linksBySlug = new Map<string, HTMLAnchorElement[]>();
+
+    for (const link of links) {
+      const slug = link.dataset.slug;
+
+      if (!slug) {
+        continue;
+      }
+
+      const groupedLinks = linksBySlug.get(slug);
+
+      if (groupedLinks) {
+        groupedLinks.push(link);
+        continue;
+      }
+
+      linksBySlug.set(slug, [link]);
+    }
+
+    const visibleIds = new Set<string>();
+    let activeSlug = "";
+
+    const updateActiveLinks = (nextSlug: string) => {
+      if (!nextSlug || nextSlug === activeSlug) {
+        return;
+      }
+
+      if (activeSlug) {
+        setLinkState(linksBySlug.get(activeSlug) ?? [], false);
+      }
+
+      setLinkState(linksBySlug.get(nextSlug) ?? [], true);
+      activeSlug = nextSlug;
+    };
+
+    const getFallbackActiveId = () => {
+      for (let index = headings.length - 1; index >= 0; index -= 1) {
+        if (headings[index].getBoundingClientRect().top <= fallbackOffset) {
+          return headings[index].id;
+        }
+      }
+
+      return headings[0].id;
+    };
+
+    const getActiveId = () => {
+      for (const heading of headings) {
+        if (visibleIds.has(heading.id)) {
+          return heading.id;
+        }
+      }
+
+      return getFallbackActiveId();
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            visibleIds.add(entry.target.id);
+          } else {
+            visibleIds.delete(entry.target.id);
+          }
+        }
+
+        updateActiveLinks(getActiveId());
+      },
+      {
+        rootMargin: "-20% 0px -65% 0px",
+        threshold: [0, 1],
+      },
+    );
+
+    for (const heading of headings) {
+      observer.observe(heading);
+    }
+
+    updateActiveLinks(getHashSlug() || headings[0].id);
+
+    window.addEventListener("hashchange", () => {
+      updateActiveLinks(getHashSlug() || getActiveId());
+    });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initTableOfContentsObserver, {
+      once: true,
+    });
+  } else {
+    initTableOfContentsObserver();
+  }
+</script>
