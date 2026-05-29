@@ -134,7 +134,10 @@ const hasTableOfContents = shouldRenderTableOfContents(tocHeadings);
       {
         hasTableOfContents && (
           <aside class="hidden xl:block xl:self-stretch">
-            <div class="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto">
+            <div
+              data-toc-scroll-container
+              class="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto"
+            >
               <TableOfContents headings={tocHeadings} />
             </div>
           </aside>

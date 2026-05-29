@@ -1,14 +1,12 @@
 <script>
   const headingSelector = "article :is(h2, h3)[id]";
   const linkSelector = "[data-toc-link]";
-  const fallbackOffset = 160;
+  const defaultActiveOffset = 128;
+  const tocScrollContainerSelector = "[data-toc-scroll-container]";
 
-  const getHashSlug = () => {
-    try {
-      return decodeURIComponent(window.location.hash.slice(1));
-    } catch {
-      return window.location.hash.slice(1);
-    }
+  type HeadingPosition = {
+    id: string;
+    top: number;
   };
 
   const setLinkState = (links: HTMLAnchorElement[], active: boolean) => {
@@ -54,8 +52,34 @@
       linksBySlug.set(slug, [link]);
     }
 
-    const visibleIds = new Set<string>();
     let activeSlug = "";
+    let activeOffset = defaultActiveOffset;
+    let headingPositions: HeadingPosition[] = [];
+    let animationFrameId: number | null = null;
+
+    const scrollActiveLinkIntoView = (slug: string) => {
+      for (const link of linksBySlug.get(slug) ?? []) {
+        const container = link.closest<HTMLElement>(tocScrollContainerSelector);
+
+        if (!container || container.getClientRects().length === 0) {
+          continue;
+        }
+
+        const containerRect = container.getBoundingClientRect();
+        const linkRect = link.getBoundingClientRect();
+        const linkTopRelative =
+          linkRect.top - containerRect.top + container.scrollTop;
+        const targetOffset = (container.clientHeight - link.offsetHeight) / 2;
+        const maxScroll = container.scrollHeight - container.clientHeight;
+        const targetScroll = Math.min(
+          maxScroll,
+          Math.max(0, linkTopRelative - targetOffset),
+        );
+
+        container.scrollTo({ top: targetScroll, behavior: "auto" });
+        return;
+      }
+    };
 
     const updateActiveLinks = (nextSlug: string) => {
       if (!nextSlug || nextSlug === activeSlug) {
@@ -68,54 +92,83 @@
 
       setLinkState(linksBySlug.get(nextSlug) ?? [], true);
       activeSlug = nextSlug;
+      scrollActiveLinkIntoView(nextSlug);
     };
 
-    const getFallbackActiveId = () => {
-      for (let index = headings.length - 1; index >= 0; index -= 1) {
-        if (headings[index].getBoundingClientRect().top <= fallbackOffset) {
-          return headings[index].id;
-        }
-      }
+    const readActiveOffset = () => {
+      const value = Number.parseFloat(
+        window.getComputedStyle(headings[0]).scrollMarginTop,
+      );
 
-      return headings[0].id;
+      return Number.isFinite(value) ? value : defaultActiveOffset;
+    };
+
+    const measureHeadings = () => {
+      activeOffset = readActiveOffset();
+      headingPositions = headings.map((heading) => ({
+        id: heading.id,
+        top: window.scrollY + heading.getBoundingClientRect().top,
+      }));
     };
 
     const getActiveId = () => {
-      for (const heading of headings) {
-        if (visibleIds.has(heading.id)) {
-          return heading.id;
+      if (headingPositions.length === 0) {
+        return headings[0].id;
+      }
+
+      const activeLine = window.scrollY + activeOffset;
+      let low = 0;
+      let high = headingPositions.length - 1;
+      let activeIndex = 0;
+
+      while (low <= high) {
+        const middle = Math.floor((low + high) / 2);
+
+        if (headingPositions[middle].top <= activeLine) {
+          activeIndex = middle;
+          low = middle + 1;
+        } else {
+          high = middle - 1;
         }
       }
 
-      return getFallbackActiveId();
+      return headingPositions[activeIndex].id;
     };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            visibleIds.add(entry.target.id);
-          } else {
-            visibleIds.delete(entry.target.id);
-          }
-        }
+    const syncActiveLinks = () => {
+      animationFrameId = null;
+      updateActiveLinks(getActiveId());
+    };
 
-        updateActiveLinks(getActiveId());
+    const scheduleSync = () => {
+      if (animationFrameId !== null) {
+        return;
+      }
+
+      animationFrameId = window.requestAnimationFrame(syncActiveLinks);
+    };
+
+    measureHeadings();
+    scheduleSync();
+
+    window.addEventListener("scroll", scheduleSync, { passive: true });
+    window.addEventListener("hashchange", scheduleSync);
+    window.addEventListener("resize", () => {
+      measureHeadings();
+      scheduleSync();
+    });
+    window.addEventListener(
+      "load",
+      () => {
+        measureHeadings();
+        scheduleSync();
       },
-      {
-        rootMargin: "-20% 0px -65% 0px",
-        threshold: [0, 1],
-      },
+      { once: true },
     );
 
-    for (const heading of headings) {
-      observer.observe(heading);
-    }
-
-    updateActiveLinks(getHashSlug() || headings[0].id);
-
-    window.addEventListener("hashchange", () => {
-      updateActiveLinks(getHashSlug() || getActiveId());
+    document.fonts.ready.then(() => {
+      measureHeadings();
+      scheduleSync();
     });
   };
 
