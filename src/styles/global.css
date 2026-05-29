@@ -16,7 +16,7 @@
 }
 
 .heading {
-  @apply font-plex font-bold tracking-[-2%];
+  @apply font-plex font-bold tracking-tight;
 }
 
 html {
