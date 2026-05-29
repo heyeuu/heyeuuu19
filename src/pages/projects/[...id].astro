@@ -1,6 +1,12 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
+import TableOfContents from "@/components/TableOfContents.astro";
+import TableOfContentsObserver from "@/components/TableOfContentsObserver.astro";
+import {
+  getTableOfContentsHeadings,
+  shouldRenderTableOfContents,
+} from "@/utils/table-of-contents";
 import { sortProjects } from "@/utils/projects";
 
 interface Props {
@@ -20,7 +26,9 @@ export async function getStaticPaths() {
 
 const { project }: Props = Astro.props;
 
-const { Content } = await render(project);
+const { Content, headings } = await render(project);
+const tocHeadings = getTableOfContentsHeadings(headings);
+const hasTableOfContents = shouldRenderTableOfContents(tocHeadings);
 ---
 
 <Layout
@@ -93,11 +101,35 @@ const { Content } = await render(project);
         class="h-full w-full object-contain"
       />
     </div>
-    <article
-      class="border-secondary mx-auto mb-18 flex-2 border-b border-dashed px-3"
+    {
+      hasTableOfContents && (
+        <TableOfContents headings={tocHeadings} collapsible />
+      )
+    }
+    {hasTableOfContents && <TableOfContentsObserver />}
+
+    <div
+      class:list={[
+        "mb-18 grid gap-10",
+        hasTableOfContents && "xl:grid-cols-[minmax(0,1fr)_18rem]",
+      ]}
     >
-      <Content />
-    </article>
+      <article
+        class="border-secondary mx-auto min-w-0 border-b border-dashed px-3"
+      >
+        <Content />
+      </article>
+
+      {
+        hasTableOfContents && (
+          <aside class="hidden xl:block xl:self-stretch">
+            <div class="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto">
+              <TableOfContents headings={tocHeadings} />
+            </div>
+          </aside>
+        )
+      }
+    </div>
   </div>
 
   <script is:inline>

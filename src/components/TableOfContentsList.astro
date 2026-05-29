@@ -1,0 +1,37 @@
+---
+import type { TableOfContentsHeading } from "@/utils/table-of-contents";
+
+interface Props {
+  headings: TableOfContentsHeading[];
+}
+
+const { headings }: Props = Astro.props;
+---
+
+<ul class="space-y-1.5">
+  {
+    headings.map((heading) => (
+      <li class:list={["relative", heading.depth === 3 && "pl-5"]}>
+        {heading.depth === 3 && (
+          <span
+            aria-hidden="true"
+            class="border-secondary/35 absolute top-1/2 left-0 w-3 -translate-y-1/2 border-t border-dashed"
+          />
+        )}
+        <a
+          href={`#${heading.slug}`}
+          data-toc-link
+          data-slug={heading.slug}
+          class:list={[
+            "text-secondary hover:text-foreground data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-foreground block rounded-r-xl border-l-2 border-transparent px-3 py-2 leading-6 transition-colors data-[active=true]:font-medium",
+            heading.depth === 2
+              ? "text-[0.95rem]"
+              : "text-secondary/80 text-[0.8125rem]",
+          ]}
+        >
+          {heading.text}
+        </a>
+      </li>
+    ))
+  }
+</ul>

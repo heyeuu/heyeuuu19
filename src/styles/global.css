@@ -16,7 +16,7 @@
 }
 
 .heading {
-  @apply font-plex tracking-[-2%] font-bold;
+  @apply font-plex font-bold tracking-[-2%];
 }
 
 html {
@@ -33,11 +33,15 @@ article {
   @apply text-secondary prose-a:underline-offset-2;
 }
 
+article :is(h2, h3) {
+  scroll-margin-top: 8rem;
+}
+
 article
   :where(code):not(
     :where(pre > code, [class~="not-prose"], [class~="not-prose"] *)
   ) {
-  @apply bg-foreground/5 text-foreground rounded-md px-1.5 py-0.5 font-plex text-[0.9em] font-medium;
+  @apply bg-foreground/5 text-foreground font-plex rounded-md px-1.5 py-0.5 text-[0.9em] font-medium;
 }
 
 article

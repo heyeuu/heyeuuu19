@@ -1,0 +1,44 @@
+---
+import TableOfContentsList from "@/components/TableOfContentsList.astro";
+import type { TableOfContentsHeading } from "@/utils/table-of-contents";
+
+interface Props {
+  headings: TableOfContentsHeading[];
+  collapsible?: boolean;
+  title?: string;
+}
+
+const {
+  headings,
+  collapsible = false,
+  title = "On this page",
+}: Props = Astro.props;
+---
+
+{
+  collapsible ? (
+    <details class="border-secondary/70 bg-background/95 not-prose rounded-[1.75rem] border border-dashed p-5 backdrop-blur-sm xl:hidden">
+      <summary class="heading cursor-pointer list-none text-lg uppercase">
+        {title}
+      </summary>
+      <nav
+        aria-label={title}
+        class="border-secondary/50 mt-4 border-t border-dashed pt-4"
+      >
+        <TableOfContentsList headings={headings} />
+      </nav>
+    </details>
+  ) : (
+    <nav
+      aria-label={title}
+      class="border-secondary/70 bg-background/95 not-prose rounded-[1.75rem] border border-dashed p-5 backdrop-blur-sm"
+    >
+      <div class="border-secondary/50 border-b border-dashed pb-4">
+        <p class="heading text-lg uppercase">{title}</p>
+      </div>
+      <div class="mt-4">
+        <TableOfContentsList headings={headings} />
+      </div>
+    </nav>
+  )
+}
