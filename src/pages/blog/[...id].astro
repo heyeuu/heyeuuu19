@@ -1,8 +1,8 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
-import TableOfContents from "@/components/TableOfContents.astro";
-import TableOfContentsObserver from "@/components/TableOfContentsObserver.astro";
+import TableOfContents from "@/components/table-of-contents/index.astro";
+import TableOfContentsObserver from "@/components/table-of-contents/Observer.astro";
 import MetadataPills from "@/components/blog/MetadataPills.astro";
 import PostPageviews from "@/components/blog/PostPageviews.astro";
 import SeriesPosts from "@/components/blog/SeriesPosts.astro";
@@ -10,7 +10,7 @@ import FormattedDate from "@/components/FormattedDate.astro";
 import {
   getTableOfContentsHeadings,
   shouldRenderTableOfContents,
-} from "@/utils/table-of-contents";
+} from "@/components/table-of-contents/utils";
 import {
   getPublishedBlogPosts,
   getSeriesPosts,

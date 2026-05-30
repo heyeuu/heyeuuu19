@@ -56,6 +56,7 @@
     let activeOffset = defaultActiveOffset;
     let headingPositions: HeadingPosition[] = [];
     let animationFrameId: number | null = null;
+    let needsMeasure = false;
 
     const scrollActiveLinkIntoView = (slug: string) => {
       for (const link of linksBySlug.get(slug) ?? []) {
@@ -137,6 +138,12 @@
 
     const syncActiveLinks = () => {
       animationFrameId = null;
+
+      if (needsMeasure) {
+        measureHeadings();
+        needsMeasure = false;
+      }
+
       updateActiveLinks(getActiveId());
     };
 
@@ -154,7 +161,7 @@
     window.addEventListener("scroll", scheduleSync, { passive: true });
     window.addEventListener("hashchange", scheduleSync);
     window.addEventListener("resize", () => {
-      measureHeadings();
+      needsMeasure = true;
       scheduleSync();
     });
     window.addEventListener(
