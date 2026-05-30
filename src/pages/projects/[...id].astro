@@ -1,12 +1,12 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
-import TableOfContents from "@/components/TableOfContents.astro";
-import TableOfContentsObserver from "@/components/TableOfContentsObserver.astro";
+import TableOfContents from "@/components/table-of-contents/index.astro";
+import TableOfContentsObserver from "@/components/table-of-contents/Observer.astro";
 import {
   getTableOfContentsHeadings,
   shouldRenderTableOfContents,
-} from "@/utils/table-of-contents";
+} from "@/components/table-of-contents/utils";
 import { sortProjects } from "@/utils/projects";
 
 interface Props {

@@ -1,0 +1,189 @@
+<script>
+  const headingSelector = "article :is(h2, h3)[id]";
+  const linkSelector = "[data-toc-link]";
+  const defaultActiveOffset = 128;
+  const tocScrollContainerSelector = "[data-toc-scroll-container]";
+
+  type HeadingPosition = {
+    id: string;
+    top: number;
+  };
+
+  const setLinkState = (links: HTMLAnchorElement[], active: boolean) => {
+    for (const link of links) {
+      link.dataset.active = String(active);
+
+      if (active) {
+        link.setAttribute("aria-current", "location");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    }
+  };
+
+  const initTableOfContentsObserver = () => {
+    const headings = Array.from(
+      document.querySelectorAll<HTMLHeadingElement>(headingSelector),
+    );
+    const links = Array.from(
+      document.querySelectorAll<HTMLAnchorElement>(linkSelector),
+    );
+
+    if (headings.length < 2 || links.length === 0) {
+      return;
+    }
+
+    const linksBySlug = new Map<string, HTMLAnchorElement[]>();
+
+    for (const link of links) {
+      const slug = link.dataset.slug;
+
+      if (!slug) {
+        continue;
+      }
+
+      const groupedLinks = linksBySlug.get(slug);
+
+      if (groupedLinks) {
+        groupedLinks.push(link);
+        continue;
+      }
+
+      linksBySlug.set(slug, [link]);
+    }
+
+    let activeSlug = "";
+    let activeOffset = defaultActiveOffset;
+    let headingPositions: HeadingPosition[] = [];
+    let animationFrameId: number | null = null;
+    let needsMeasure = false;
+
+    const scrollActiveLinkIntoView = (slug: string) => {
+      for (const link of linksBySlug.get(slug) ?? []) {
+        const container = link.closest<HTMLElement>(tocScrollContainerSelector);
+
+        if (!container || container.getClientRects().length === 0) {
+          continue;
+        }
+
+        const containerRect = container.getBoundingClientRect();
+        const linkRect = link.getBoundingClientRect();
+        const linkTopRelative =
+          linkRect.top - containerRect.top + container.scrollTop;
+        const targetOffset = (container.clientHeight - link.offsetHeight) / 2;
+        const maxScroll = container.scrollHeight - container.clientHeight;
+        const targetScroll = Math.min(
+          maxScroll,
+          Math.max(0, linkTopRelative - targetOffset),
+        );
+
+        container.scrollTo({ top: targetScroll, behavior: "auto" });
+        return;
+      }
+    };
+
+    const updateActiveLinks = (nextSlug: string) => {
+      if (!nextSlug || nextSlug === activeSlug) {
+        return;
+      }
+
+      if (activeSlug) {
+        setLinkState(linksBySlug.get(activeSlug) ?? [], false);
+      }
+
+      setLinkState(linksBySlug.get(nextSlug) ?? [], true);
+      activeSlug = nextSlug;
+      scrollActiveLinkIntoView(nextSlug);
+    };
+
+    const readActiveOffset = () => {
+      const value = Number.parseFloat(
+        window.getComputedStyle(headings[0]).scrollMarginTop,
+      );
+
+      return Number.isFinite(value) ? value : defaultActiveOffset;
+    };
+
+    const measureHeadings = () => {
+      activeOffset = readActiveOffset();
+      headingPositions = headings.map((heading) => ({
+        id: heading.id,
+        top: window.scrollY + heading.getBoundingClientRect().top,
+      }));
+    };
+
+    const getActiveId = () => {
+      if (headingPositions.length === 0) {
+        return headings[0].id;
+      }
+
+      const activeLine = window.scrollY + activeOffset;
+      let low = 0;
+      let high = headingPositions.length - 1;
+      let activeIndex = 0;
+
+      while (low <= high) {
+        const middle = Math.floor((low + high) / 2);
+
+        if (headingPositions[middle].top <= activeLine) {
+          activeIndex = middle;
+          low = middle + 1;
+        } else {
+          high = middle - 1;
+        }
+      }
+
+      return headingPositions[activeIndex].id;
+    };
+
+    const syncActiveLinks = () => {
+      animationFrameId = null;
+
+      if (needsMeasure) {
+        measureHeadings();
+        needsMeasure = false;
+      }
+
+      updateActiveLinks(getActiveId());
+    };
+
+    const scheduleSync = () => {
+      if (animationFrameId !== null) {
+        return;
+      }
+
+      animationFrameId = window.requestAnimationFrame(syncActiveLinks);
+    };
+
+    measureHeadings();
+    scheduleSync();
+
+    window.addEventListener("scroll", scheduleSync, { passive: true });
+    window.addEventListener("hashchange", scheduleSync);
+    window.addEventListener("resize", () => {
+      needsMeasure = true;
+      scheduleSync();
+    });
+    window.addEventListener(
+      "load",
+      () => {
+        measureHeadings();
+        scheduleSync();
+      },
+      { once: true },
+    );
+
+    document.fonts.ready.then(() => {
+      measureHeadings();
+      scheduleSync();
+    });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initTableOfContentsObserver, {
+      once: true,
+    });
+  } else {
+    initTableOfContentsObserver();
+  }
+</script>
