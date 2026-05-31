@@ -19,7 +19,7 @@ export const HOME = {
     HREF: "/projects",
   },
   HERO_SECONDARY_CTA: {
-    LABEL: "Hire me",
+    LABEL: "Contact me",
     HREF: "#Contact",
   },
 };

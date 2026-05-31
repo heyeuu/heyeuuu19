@@ -5,14 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "build:force": "astro build --force",
-    "preview": "astro preview",
-    "astro": "astro",
-    "pageviews:sync": "bun ./scripts/pageviews/sync.ts",
-    "content": "bun ./scripts/content/index.ts",
-    "content:new": "bun ./scripts/content/index.ts new",
-    "content:check": "bun ./scripts/content/index.ts check",
-    "content:patch": "bun ./scripts/content/index.ts patch"
+    "preview": "astro preview"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.2",
@@ -31,12 +24,9 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
-    "@types/prompts": "^2.4.9",
     "prettier": "^3.8.1",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.6.14",
-    "prompts": "^2.4.2",
-    "typescript": "^5.3.3",
-    "yaml": "^2.8.3"
+    "typescript": "^5.3.3"
   }
 }

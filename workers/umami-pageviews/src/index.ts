@@ -1,4 +1,4 @@
-import { ALLOWED_PAGEVIEW_PATH_PREFIXES } from "./allowed-paths.generated";
+const ALLOWED_PAGEVIEW_PATH_PREFIXES = ["/blog", "/projects"] as const;
 
 const ALL_TIME_START_MS = Date.UTC(2000, 0, 1);
 const API_ROUTE_PREFIX = "/api/pageviews";
