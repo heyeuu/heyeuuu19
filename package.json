@@ -5,22 +5,17 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "build:force": "astro build --force",
-    "preview": "astro preview",
-    "astro": "astro",
-    "pageviews:sync": "bun ./scripts/pageviews/sync.ts",
-    "content": "bun ./scripts/content/index.ts",
-    "content:new": "bun ./scripts/content/index.ts new",
-    "content:check": "bun ./scripts/content/index.ts check",
-    "content:patch": "bun ./scripts/content/index.ts patch"
+    "preview": "astro preview"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.2",
     "@astrojs/sitemap": "^3.7.1",
     "@astrojs/svelte": "^8.0.4",
+    "@expressive-code/plugin-collapsible-sections": "^0.42.0",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.1",
     "astro": "^6.0.4",
+    "astro-expressive-code": "^0.42.0",
     "rehype-katex": "^7.0.1",
     "rehype-slug": "^6.0.0",
     "remark-math": "^6.0.0",
@@ -29,12 +24,9 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
-    "@types/prompts": "^2.4.9",
     "prettier": "^3.8.1",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.6.14",
-    "prompts": "^2.4.2",
-    "typescript": "^5.3.3",
-    "yaml": "^2.8.3"
+    "typescript": "^5.3.3"
   }
 }

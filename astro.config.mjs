@@ -1,4 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
+import astroExpressiveCode from "astro-expressive-code";
 import { defineConfig, fontProviders } from "astro/config";
 import mdx from "@astrojs/mdx";
 import svelte from "@astrojs/svelte";
@@ -32,5 +33,5 @@ export default defineConfig({
       provider: fontProviders.google(),
     },
   ],
-  integrations: [mdx(), svelte(), sitemap()],
+  integrations: [astroExpressiveCode(), mdx(), svelte(), sitemap()],
 });

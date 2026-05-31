@@ -298,7 +298,7 @@ const hasTableOfContents = shouldRenderTableOfContents(tocHeadings);
   </div>
 
   <script is:inline>
-    document.getElementById("back-button").addEventListener("click", () => {
+    document.getElementById("back-button")?.addEventListener("click", () => {
       window.history.back();
     });
   </script>
